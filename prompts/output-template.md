@@ -2,6 +2,51 @@
 
 All PolyLens reviews produce structured output following these templates.
 
+## Presentation Rules
+
+- Prefer plain markdown headings, bold labels, and short bullet lists.
+- Do not use ASCII box borders for the final brief.
+- Prefer stacked comparison blocks over wide markdown tables so output stays readable in chat, terminals, and narrow editor panes.
+
+### Compact Example
+
+```markdown
+VERDICT ALIGNMENT
+=================
+Alignment: SPLIT
+CTO: MODIFY
+CPO: GO
+CEO: MODIFY
+
+CONFLICT MAP
+============
+- Scope:
+  - CTO: Narrow to API and schema changes first
+  - CPO: Include the full onboarding flow now
+  - CEO: Ship the smallest differentiated wedge
+- Timeline:
+  - CTO: Phase rollout over 2 releases
+  - CPO: Validate with a pilot this sprint
+  - CEO: Launch as soon as the core story is credible
+
+EXECUTIVE ALIGNMENT REVIEW - COMPLETION SUMMARY
+===============================================
+Plan: Guided onboarding revamp
+Review type: enhancement
+Primary lens: CPO
+Date: 2026-04-05
+Lenses involved: CTO, CPO, CEO
+
+FINAL DECISION
+--------------
+Ship a pilot onboarding flow now, but defer deeper platform changes to a second phase.
+
+KEY TRADEOFFS
+-------------
+- Scope vs speed: Cut non-essential setup paths to reduce implementation risk.
+- UX ambition vs delivery safety: Validate the core flow before reworking shared infrastructure.
+```
+
 ## Section 1: Individual Lens Positions
 
 Each lens produces this output:
@@ -39,11 +84,11 @@ Non-negotiables: [what must not change — security, stability, etc.]
 ```
 VERDICT ALIGNMENT
 =================
+Alignment: [UNANIMOUS / SPLIT / ALL DISAGREE]
 <Lens A>: [GO / MODIFY / BLOCK]
 <Lens B>: [GO / MODIFY / BLOCK]
 [<Lens C>: [GO / MODIFY / BLOCK]]
 [<Lens D>: [GO / MODIFY / BLOCK]]
-Alignment: [UNANIMOUS / SPLIT / ALL DISAGREE]
 ```
 
 **Alignment status definitions:**
@@ -53,21 +98,39 @@ Alignment: [UNANIMOUS / SPLIT / ALL DISAGREE]
 
 ## Section 3: Detailed Conflict Mapping
 
-Matrix view across dimensions. Each cell contains the lens's position on that dimension (GO/MODIFY/BLOCK + brief reason, or a short phrase describing their stance).
+Stacked view across dimensions. Each dimension lists the lens's position on that dimension (GO/MODIFY/BLOCK + brief reason, or a short phrase describing their stance).
 
 ```
 CONFLICT MAP
 ============
-Dimension        | <Lens A>          | <Lens B>          | [<Lens C>]        | [<Lens D>]
------------------|-------------------|-------------------|-------------------|-------------------
-Scope            | [stance + reason] | [stance + reason] | [stance + reason] | [stance + reason]
-Timeline         | [stance + reason] | [stance + reason] | [stance + reason] | [stance + reason]
-Resource         | [stance + reason] | [stance + reason] | [stance + reason] | [stance + reason]
-Risk             | [stance + reason] | [stance + reason] | [stance + reason] | [stance + reason]
-Success Criteria | [stance + reason] | [stance + reason] | [stance + reason] | [stance + reason]
+- Scope:
+  - <Lens A>: [stance + reason]
+  - <Lens B>: [stance + reason]
+  - [<Lens C>: [stance + reason]]
+  - [<Lens D>: [stance + reason]]
+- Timeline:
+  - <Lens A>: [stance + reason]
+  - <Lens B>: [stance + reason]
+  - [<Lens C>: [stance + reason]]
+  - [<Lens D>: [stance + reason]]
+- Resource:
+  - <Lens A>: [stance + reason]
+  - <Lens B>: [stance + reason]
+  - [<Lens C>: [stance + reason]]
+  - [<Lens D>: [stance + reason]]
+- Risk:
+  - <Lens A>: [stance + reason]
+  - <Lens B>: [stance + reason]
+  - [<Lens C>: [stance + reason]]
+  - [<Lens D>: [stance + reason]]
+- Success Criteria:
+  - <Lens A>: [stance + reason]
+  - <Lens B>: [stance + reason]
+  - [<Lens C>: [stance + reason]]
+  - [<Lens D>: [stance + reason]]
 ```
 
-Use only the columns needed for the selected 2-4 lenses.
+Use only the columns needed for the selected 2-4 lenses if you must render a table. Prefer the stacked layout below over wide markdown tables.
 
 ## Section 4: Final Alignment After Resolution
 
@@ -112,10 +175,16 @@ ASSUMPTIONS / UNKNOWNS
 
 RISK REGISTER
 ==============
-RISK              | SOURCE  | SEVERITY | LIKELIHOOD | MITIGATION
-------------------|---------|----------|------------|------------
-[description]     | [lens]  | [severity] | [likelihood] | [plan]
-[description]     | [lens]  | [severity] | [likelihood] | [plan]
+1. [Risk description]
+  Source: [lens]
+  Severity: [LOW / MEDIUM / HIGH / CRITICAL]
+  Likelihood: [LOW / MEDIUM / HIGH]
+  Mitigation: [plan]
+2. [Risk description]
+  Source: [lens]
+  Severity: [LOW / MEDIUM / HIGH / CRITICAL]
+  Likelihood: [LOW / MEDIUM / HIGH]
+  Mitigation: [plan]
 ```
 
 When a Type 5 conflict needs a user decision, do not output this section as if it were complete. Output the partial-brief split below and stop for user input:
@@ -147,58 +216,68 @@ What remains blocked until then: [critical unresolved item]
 ## Section 5: Final Summary Dashboard
 
 Use this section only when the brief is complete and no user decision is still pending.
+Use short labeled lines and bullets; do not use ASCII box borders.
 
 ```
-+====================================================================+
-|         EXECUTIVE ALIGNMENT REVIEW - COMPLETION SUMMARY            |
-+====================================================================+
-| Plan               | [title]                                       |
-| Review type        | [new feature / enhancement / refactor / etc.] |
-| Primary lens       | [CEO / CTO / CPO / etc.]                      |
-| Date               | [YYYY-MM-DD]                                  |
-| Lenses involved    | [list of lenses]                              |
-+--------------------------------------------------------------------+
-| FINAL DECISION                                                      |
-| [Clear recommendation with reasoning]                              |
-|                                                                     |
-| KEY TRADEOFFS                                                       |
-| - [Tradeoff 1]: Chose [X] because [reason]                         |
-| - [Tradeoff 2]: Chose [Y] because [reason]                         |
-|                                                                     |
-| RISKS ACCEPTED                                                      |
-| - [Risk 1] (mitigated by [plan])                                   |
-|                                                                     |
-| MITIGATION PLAN                                                     |
-| [Concrete steps to reduce accepted risks]                          |
-|                                                                     |
-| DISSENTING OPINIONS                                                 |
-| - [Lens]: Recommends [alternative] because [reason]                |
-|                                                                     |
-| CONFIDENCE LEVEL: [High / Medium / Low]                            |
-+--------------------------------------------------------------------+
-| INDIVIDUAL POSITIONS                                                |
-| <Lens A> verdict | [GO / MODIFY / BLOCK] + [key concern]           |
-| <Lens B> verdict | [GO / MODIFY / BLOCK] + [key concern]           |
-| [<Lens C> verdict | [GO / MODIFY / BLOCK] + [key concern]]         |
-| [<Lens D> verdict | [GO / MODIFY / BLOCK] + [key concern]]         |
-+--------------------------------------------------------------------+
-| CONFLICT RESOLUTION                                                 |
-| Total conflicts    | [N]                                           |
-| Type 1 (Priority)  | [N] resolved                                  |
-| Type 2 (Scope)     | [N] resolved                                  |
-| Type 3 (Risk)      | [N] resolved                                  |
-| Type 4 (Resource)  | [N] resolved                                  |
-| Type 5 (Fundamental)| [N] resolved / [N] awaiting input           |
+EXECUTIVE ALIGNMENT REVIEW - COMPLETION SUMMARY
+===============================================
+Plan: [title]
+Review type: [new feature / enhancement / refactor / etc.]
+Primary lens: [CEO / CTO / CPO / etc.]
+Date: [YYYY-MM-DD]
+Lenses involved: [list of lenses]
+
+FINAL DECISION
+--------------
+[Clear recommendation with reasoning]
+
+KEY TRADEOFFS
+-------------
+- [Tradeoff 1]: Chose [X] because [reason]
+- [Tradeoff 2]: Chose [Y] because [reason]
+
+RISKS ACCEPTED
+--------------
+- [Risk 1] (mitigated by [plan])
+
+MITIGATION PLAN
+---------------
+- [Concrete step 1]
+- [Concrete step 2]
+
+DISSENTING OPINIONS
+-------------------
+- [Lens]: Recommends [alternative] because [reason]
+
+CONFIDENCE LEVEL
+----------------
+[High / Medium / Low]
+
+INDIVIDUAL POSITIONS
+--------------------
+- <Lens A>: [GO / MODIFY / BLOCK] + [key concern]
+- <Lens B>: [GO / MODIFY / BLOCK] + [key concern]
+- [<Lens C>: [GO / MODIFY / BLOCK] + [key concern]]
+- [<Lens D>: [GO / MODIFY / BLOCK] + [key concern]]
+
+CONFLICT RESOLUTION
+-------------------
+- Total conflicts: [N]
+- Type 1 (Priority): [N] resolved
+- Type 2 (Scope): [N] resolved
+- Type 3 (Risk): [N] resolved
+- Type 4 (Resource): [N] resolved
+- Type 5 (Fundamental): [N] resolved / [N] awaiting input
 <!-- Conflict types defined in prompts/conflict-types.md -->
-+--------------------------------------------------------------------+
-| OUTCOMES                                                            |
-| Changes to plan    | [N] items                                     |
-| Unanimous agreements| [N] items                                    |
-| Deferred decisions | [N] items                                     |
-| Assumptions open   | [N] items                                     |
-| Risks flagged      | [N] items ([N] High severity)                 |
-| Unresolved (BLOCK) | [N] items — plan cannot proceed               |
-+====================================================================+
+
+OUTCOMES
+--------
+- Changes to plan: [N] items
+- Unanimous agreements: [N] items
+- Deferred decisions: [N] items
+- Assumptions open: [N] items
+- Risks flagged: [N] items ([N] High severity)
+- Unresolved (BLOCK): [N] items — plan cannot proceed
 ```
 
 ## Confidence Level Criteria

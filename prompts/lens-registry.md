@@ -219,9 +219,18 @@ Each lens entry contains:
 ## Selection Algorithm (for orchestrator reference)
 
 1. **Filter active lenses:** Only consider lenses where `active: true`
-2. **Score explicit wording:** Exact or near-exact matches against `triggers` score +2; domain/theme matches score +1
-3. **Rank by relevance:** Sum the scores and keep a note of which user constraints each lens covers
-4. **Apply pairing rules:** If a top lens has `pairs_with` recommendations, boost those lenses' scores by 0.5 (only if they are also active)
-5. **Prefer coverage:** Select 2-4 lenses that cover the prompt's main business, product, technical, operational, financial, or risk themes rather than stacking near-duplicates
-6. **Break ties deterministically:** Use this order: stronger trigger match, more direct user wording match, `default: true`, registry order
-7. **Fallback:** If no strong matches (all scores < 2), use lenses marked `default: true`
+2. **Identify the decision anchor:** Separate the primary decision being asked from supporting constraints. The primary decision should drive the first lens selection.
+3. **Score explicit wording:** Exact or near-exact matches against `triggers` score +2; domain/theme matches score +1
+4. **Downweight ambient constraints:** Budget, timeline, team size, compliance, or risk details count as supporting signals unless the user explicitly asks to optimize for them or they are central to the decision itself
+5. **Rank by relevance:** Sum the scores and keep a note of which user constraints each lens covers, but prefer lenses that match the decision anchor over lenses that only match surrounding constraints
+6. **Apply pairing rules:** If a top lens has `pairs_with` recommendations, boost those lenses' scores by 0.5 (only if they are also active)
+7. **Promote strategic complement when needed:** If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, this usually means pairing CTO with CEO.
+8. **Prefer coverage without drift:** Select 2-4 lenses that cover the prompt's main decision and its highest-consequence tradeoffs rather than stacking near-duplicates or adding weakly related oversight lenses
+9. **Cap secondary lenses:** After the anchor lens and any necessary strategy complement, add supporting lenses only when they introduce a distinct decision axis with explicit evidence. Do not add finance, security, or operations lenses solely because those concerns exist in the background.
+10. **Break ties deterministically:** Use this order: stronger decision-anchor match, stronger trigger match, more direct user wording match, `default: true`, registry order
+11. **Fallback:** If no strong matches (all scores < 2), use lenses marked `default: true`
+
+Example guidance:
+- If the user asks about "tech stack," anchor on CTO first and usually include CEO because stack choice shapes speed, leverage, and company direction.
+- Add CISO only when security/compliance is an explicit decision axis, not just a generic best practice.
+- Add CFO only when spend/runway/ROI is itself being decided, not merely because cost always matters.

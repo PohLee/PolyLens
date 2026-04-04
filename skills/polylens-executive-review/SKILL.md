@@ -1,6 +1,5 @@
 ---
 name: polylens-executive-review
-version: 1
 description: Use when running a full multi-perspective executive review. Triggers: run executive review, polylens review, multi-lens review, analyze from multiple perspectives, review this decision. Automatically selects 2-4 relevant lenses based on problem context, runs collision detection, and produces a structured decision brief. Part of the PolyLens multi-perspective reasoning system.
 ---
 
@@ -25,11 +24,15 @@ Read the lens registry at `prompts/lens-registry.md`.
 
 **If no lenses specified:** Run the selection algorithm:
 1. Filter active lenses: Only consider lenses where `active: true`
-2. Score explicit trigger phrase matches at +2 and domain/theme matches at +1
-3. Boost scores for lenses in `pairs_with` of top-scoring lenses (+0.5, only if active)
-4. Prefer a balanced set of 2-4 lenses that covers the dominant business, product, technical, operational, financial, or risk themes present in the prompt
-5. Break ties deterministically in this order: explicit user wording match, trigger score, `default: true`, registry order
-6. If the prompt is ambiguous and no lens scores above 2, use the default lenses marked in the registry
+2. Identify the primary decision anchor and separate it from supporting constraints such as budget, timeline, team size, compliance, or risk
+3. Score explicit trigger phrase matches at +2 and domain/theme matches at +1
+4. Downweight supporting constraints unless the user explicitly asks to optimize for them or they are central to the decision itself
+5. Boost scores for lenses in `pairs_with` of top-scoring lenses (+0.5, only if active)
+6. If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, usually include CEO with CTO.
+7. Prefer a balanced set of 2-4 lenses that covers the anchor decision and only the highest-consequence secondary tradeoffs present in the prompt
+8. Do not add finance, security, or operations lenses solely because those concerns exist in the background; require explicit evidence that they are decision-driving
+9. Break ties deterministically in this order: decision-anchor match, explicit user wording match, trigger score, `default: true`, registry order
+10. If the prompt is ambiguous and no lens scores above 2, use the default lenses marked in the registry
 
 Announce which lenses were selected and why.
 

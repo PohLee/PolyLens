@@ -64,13 +64,16 @@ Run CISO review on our authentication flow
 
 ### Mode 3: Pre-Fight
 
-Adversarial critique. Lenses attack each other's positions, defend their own, and escalate the strongest disagreements.
+Adversarial critique. Lenses attack each other's positions, defend their own, and then either escalate the strongest disagreements for user choice or finish automatically with deterministic arbitration.
 
 ```
 Run pre-fight review on our pricing strategy
+Run fully automatic pre-fight review on our pricing strategy
 ```
 
-**Triggers:** *"pre-fight review"*, *"adversarial review"*, *"critique from all angles"*, *"stress-test this decision"*
+**Triggers:** *"pre-fight review"*, *"adversarial review"*, *"critique from all angles"*, *"stress-test this decision"*, *"debate"*, *"fully automatic pre-fight"*, *"auto-resolve disagreements"*, *"without user input"*
+
+Standard pre-fight stays interactive and stops when a fundamental split needs a user decision. Add language like *"fully automatic"*, *"decide for me"*, or *"without user input"* to force automatic arbitration and a completed recommendation.
 
 ---
 
@@ -85,11 +88,17 @@ Run pre-fight review on our pricing strategy
 | 🔗 **COO** | Chief Operating Officer | Operations, supply chain, process optimization | No | Supply chain, vendor management, capacity planning |
 | 📣 **CMO** | Chief Marketing Officer | Marketing, brand, growth acquisition | No | Marketing campaigns, brand strategy, customer acquisition |
 | 🤝 **CBDO** | Chief Business Development Officer | Partnerships, revenue channels, strategic alliances | No | Partnerships, joint ventures, channel strategy |
+| 💼 **CRO** | Chief Revenue Officer | Revenue strategy, sales execution, GTM alignment | No | Revenue targets, pipeline, pricing optimization, sales velocity |
 | 🚀 **YC** | Y Combinator | Clarity, fundability, simplicity | No | Fundraising, MVP scope, investor readiness |
 | 📊 **CIO** | Chief Information Officer | Operational efficiency, internal systems | No | Workflow automation, internal tools |
 | 📈 **CDO** | Chief Data Officer | Data strategy, analytics, metrics | No | Data pipelines, ML, business intelligence |
 | 🔒 **CISO** | Chief Information Security Officer | Security posture, compliance, risk | No | Auth, GDPR, SOC2, vulnerability |
 | 👤 **CXO** | Chief Experience Officer | Customer experience, UI/UX design, journey | No | NPS, churn, support, UI design, accessibility |
+| 🧑‍🤝‍🧑 **CCO** | Chief Customer Officer | Customer journey, retention, satisfaction, advocacy | No | Customer retention, churn reduction, NPS, customer success |
+| 🤖 **CAIO** | Chief AI Officer | AI strategy, ethics, governance, AI ROI | No | AI/ML deployment, AI ethics, LLM integration, AI compliance |
+| 🔄 **CAgO** | Chief Agile Officer | Organizational agility, delivery enablement, team health | No | Agile transformation, sprint planning, ways of working |
+| 👥 **CHRO** | Chief Human Resources Officer | Talent strategy, culture, employee experience | No | Hiring, retention, compensation, leadership development |
+| ⚖️ **CLO** | Chief Legal Officer | Legal risk, regulatory compliance, governance, IP | No | Contract review, regulatory compliance, IP protection |
 
 **Default lenses** (CEO + CTO + CPO) activate when no strong keyword match is found.
 
@@ -116,11 +125,16 @@ Decision Brief        ← 5-section structured output
 The orchestrator doesn't run all lenses. It selects the most relevant ones:
 
 1. **Filter** — only active lenses considered
-2. **Match** — scan problem against each lens's domains and triggers
-3. **Score** — count keyword matches
-4. **Boost** — pair complementary lenses (+0.5)
-5. **Select** — top 2-4 lenses
-6. **Fallback** — default trio if no strong matches
+2. **Anchor** — identify the primary decision being asked, separate from supporting constraints
+3. **Match** — scan problem against each lens's domains and triggers
+4. **Downweight ambient constraints** — budget, timeline, team size, compliance, or risk details are supporting signals unless explicitly decision-driving
+5. **Score** — rank anchor matches ahead of lenses that only match surrounding constraints
+6. **Boost** — pair complementary lenses (+0.5)
+7. **Add strategy complement when needed** — if the decision is foundational and company-shaping, include the nearest strategy lens even when the wording is technical
+8. **Select** — choose 2-4 lenses that cover the anchor decision first, then only the strongest secondary tradeoffs
+9. **Fallback** — default trio if no strong matches
+
+Example: for a question about "tech stack," CTO should be selected first and CEO should usually be included as the strategic counterpart. Add CISO only when security/compliance is itself part of the decision. Add CFO only when spend, runway, or ROI is being explicitly optimized.
 
 You can always override: *"Run CTO + CISO review on this auth system"*
 
@@ -130,13 +144,35 @@ You can always override: *"Run CTO + CISO review on this auth system"*
 
 Every executive review produces a structured 5-section brief:
 
-| Section | What It Contains |
-|---------|------------------|
-| **1. Individual Positions** | GO / MODIFY / BLOCK verdicts with concerns, endorsements, non-negotiables |
-| **2. Conflict Detection** | Verdict alignment table — UNANIMOUS / 2-vs-1 / ALL DISAGREE |
-| **3. Conflict Mapping** | Matrix across Scope, Timeline, Resource, Risk, Success Criteria |
-| **4. Final Alignment** | Changes to plan, unanimous agreements, deferred decisions, risk register |
-| **5. Summary Dashboard** | Executive summary with decision, tradeoffs, risks, mitigations, confidence |
+1. **Individual Positions**: GO / MODIFY / BLOCK verdicts with concerns, endorsements, and non-negotiables.
+2. **Conflict Detection**: Verdict alignment summary plus conflict counts.
+3. **Conflict Mapping**: Stacked comparison across Scope, Timeline, Resource, Risk, and Success Criteria.
+4. **Final Alignment**: Changes to plan, unanimous agreements, deferred decisions, assumptions, and a risk register.
+5. **Summary Dashboard**: Compact executive summary with decision, tradeoffs, risks, mitigations, and confidence.
+
+The brief is optimized for chat and narrow panes: prefer labeled sections and bullets over wide tables or ASCII borders.
+
+Example presentation:
+
+```markdown
+VERDICT ALIGNMENT
+=================
+Alignment: SPLIT
+CTO: MODIFY
+CPO: GO
+CEO: MODIFY
+
+CONFLICT MAP
+============
+- Scope:
+    - CTO: Narrow to API and schema changes first
+    - CPO: Include the full onboarding flow now
+    - CEO: Ship the smallest differentiated wedge
+
+FINAL DECISION
+--------------
+Ship a pilot now, defer platform-heavy changes to phase two.
+```
 
 Conflicts are classified into 5 types: **Priority**, **Scope**, **Risk**, **Resource**, and **Fundamental**. Types 1-4 are auto-resolved; Type 5 is escalated to you.
 
@@ -187,7 +223,19 @@ polylens/
 │   │   └── SKILL.md
 │   ├── lens-cmo/                     # Chief Marketing Officer
 │   │   └── SKILL.md
-│   └── lens-cbdo/                    # Chief Business Development Officer
+│   ├── lens-cbdo/                    # Chief Business Development Officer
+│   │   └── SKILL.md
+│   ├── lens-cro/                     # Chief Revenue Officer
+│   │   └── SKILL.md
+│   ├── lens-caio/                    # Chief AI Officer
+│   │   └── SKILL.md
+│   ├── lens-cago/                    # Chief Agile Officer
+│   │   └── SKILL.md
+│   ├── lens-chro/                    # Chief Human Resources Officer
+│   │   └── SKILL.md
+│   ├── lens-clo/                     # Chief Legal Officer
+│   │   └── SKILL.md
+│   └── lens-cco/                     # Chief Customer Officer
 │       └── SKILL.md
 ├── engines/                          # Shared processing logic
 │   ├── collision.md                  # Conflict detection & classification

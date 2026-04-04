@@ -107,14 +107,18 @@ ASSUMPTIONS / UNKNOWNS
 
 RISK REGISTER
 ==============
-[List risks with source, severity, likelihood, mitigation]
+1. [Risk description]
+  Source: [lens]
+  Severity: [LOW / MEDIUM / HIGH / CRITICAL]
+  Likelihood: [LOW / MEDIUM / HIGH]
+  Mitigation: [plan]
 ```
 
 If user input is still required, replace Section 4 with the `DECISION SPLIT (AWAITING USER INPUT)` format from `prompts/output-template.md`, keep Sections 1-3, and stop before producing a completed Section 5 dashboard.
 
 ### Section 5: Final Summary Dashboard
 
-Assemble the completion summary table following the template in `prompts/output-template.md`. Fill the 6 primary dashboard fields and the supporting summary sections:
+Assemble the completion summary block following the template in `prompts/output-template.md`. Use short labeled lines and bullet lists instead of box-drawing or wide tables. Fill the 6 primary dashboard fields and the supporting summary sections:
 
 1. **FINAL DECISION** — Clear, actionable recommendation with reasoning
 2. **KEY TRADEOFFS** — Explicit tradeoffs with dimension scores

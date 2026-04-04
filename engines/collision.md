@@ -61,21 +61,39 @@ Output:
 ```
 VERDICT ALIGNMENT
 =================
+Alignment: [UNANIMOUS / SPLIT / ALL DISAGREE]
 <Lens A>: [GO / MODIFY / BLOCK]
 <Lens B>: [GO / MODIFY / BLOCK]
 [<Lens C>: [GO / MODIFY / BLOCK]]
 [<Lens D>: [GO / MODIFY / BLOCK]]
-Alignment: [UNANIMOUS / SPLIT / ALL DISAGREE]
 
 CONFLICT MAP
 ============
-Dimension        | <Lens A> | <Lens B> | [<Lens C>] | [<Lens D>]
------------------|----------|----------|------------|------------
-Scope            | [view]   | [view]   | [view]     | [view]
-Timeline         | [view]   | [view]   | [view]     | [view]
-Resource         | [view]   | [view]   | [view]     | [view]
-Risk             | [view]   | [view]   | [view]     | [view]
-Success Criteria | [view]   | [view]   | [view]     | [view]
+- Scope:
+  - <Lens A>: [view]
+  - <Lens B>: [view]
+  - [<Lens C>: [view]]
+  - [<Lens D>: [view]]
+- Timeline:
+  - <Lens A>: [view]
+  - <Lens B>: [view]
+  - [<Lens C>: [view]]
+  - [<Lens D>: [view]]
+- Resource:
+  - <Lens A>: [view]
+  - <Lens B>: [view]
+  - [<Lens C>: [view]]
+  - [<Lens D>: [view]]
+- Risk:
+  - <Lens A>: [view]
+  - <Lens B>: [view]
+  - [<Lens C>: [view]]
+  - [<Lens D>: [view]]
+- Success Criteria:
+  - <Lens A>: [view]
+  - <Lens B>: [view]
+  - [<Lens C>: [view]]
+  - [<Lens D>: [view]]
 
 CONFLICTS DETECTED: [N]
   Type 1 (Priority):  [N]
@@ -91,6 +109,8 @@ CANONICAL CONFLICT LIST
    Lenses: [list]
    Affected dimensions: [Scope / Timeline / Resource / Risk / Success Criteria]
 ```
+
+Prefer stacked markdown blocks over wide tables so the summary stays readable in chat and narrow editor panes.
 
 ## Special Cases
 

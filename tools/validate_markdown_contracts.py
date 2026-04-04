@@ -13,8 +13,8 @@ REGISTRY_PATH = ROOT / "prompts" / "lens-registry.md"
 OUTPUT_TEMPLATE_PATH = ROOT / "prompts" / "output-template.md"
 COLLISION_PATH = ROOT / "engines" / "collision.md"
 SYNTHESIS_PATH = ROOT / "engines" / "synthesis.md"
-EXEC_REVIEW_PATH = ROOT / "skills" / "polylens-executive-review.md"
-PRE_FIGHT_PATH = ROOT / "skills" / "polylens-pre-fight.md"
+EXEC_REVIEW_PATH = ROOT / "skills" / "polylens-executive-review" / "SKILL.md"
+PRE_FIGHT_PATH = ROOT / "skills" / "polylens-pre-fight" / "SKILL.md"
 SKILLS_DIR = ROOT / "skills"
 
 
@@ -177,7 +177,8 @@ def validate_output_template(errors: list[str]) -> None:
         "- Assumptions / Unknowns:",
         "ASSUMPTIONS / UNKNOWNS",
         "DECISION SPLIT (AWAITING USER INPUT)",
-        "Use only the columns needed for the selected 2-4 lenses.",
+        "Prefer the stacked layout below over wide markdown tables.",
+        "Use short labeled lines and bullets; do not use ASCII box borders.",
         "Use this section only when the brief is complete and no user decision is still pending.",
     ]:
         require(
@@ -238,6 +239,9 @@ def validate_orchestrators(errors: list[str]) -> None:
     for required_text in [
         "skills/lens-<name>/SKILL.md",
         "Select at most 3 disagreements total across the whole review",
+        "Default to `interactive` mode",
+        "AUTOMATIC ARBITRATION",
+        "Mode: [INTERACTIVE / AUTOMATIC]",
         "POSITION CHANGES AFTER CRITIQUE",
         "Critique only the strongest disagreements; do not run all-to-all commentary",
         "Keep the report compact; prioritize signal over completeness",

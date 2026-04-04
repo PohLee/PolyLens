@@ -57,13 +57,16 @@ Run CTO review on our new API design
 
 ### Mode 3: Pre-Fight (Adversarial Critique)
 
-Invoke the `polylens-pre-fight` skill for structured conflict between lenses. Lenses critique each other's positions, defend their own, and escalate the strongest disagreements.
+Invoke the `polylens-pre-fight` skill for structured conflict between lenses. Lenses critique each other's positions, defend their own, and then either escalate the strongest disagreements or finish automatically with deterministic arbitration.
 
-**Triggers:** "pre-fight review", "adversarial review", "critique from all angles", "stress-test this decision"
+**Triggers:** "pre-fight review", "adversarial review", "critique from all angles", "stress-test this decision", "debate", "fully automatic pre-fight", "auto-resolve disagreements", "without user input"
 
 ```
 Run pre-fight review on our pricing strategy
+Run fully automatic pre-fight review on our pricing strategy
 ```
+
+Normal pre-fight mode remains interactive and stops when a fundamental disagreement needs user direction. Add wording such as "fully automatic", "decide for me", or "without user input" to force automatic arbitration and a completed recommendation.
 
 ---
 
@@ -158,11 +161,16 @@ Decision Brief (5-section structured output)
 The orchestrator does not run all lenses. It selects the 2-4 most relevant lenses using this algorithm:
 
 1. **Filter active lenses** — only lenses with `active: true` are considered
-2. **Keyword match** — scan problem against each lens's `domains` and `triggers`
-3. **Score & rank** — count matches, rank by relevance
-4. **Pairing boost** — if a top lens has `pairs_with` recommendations, boost those lenses by +0.5
-5. **Select top 2-4** — minimum 2, maximum 4
-6. **Fallback** — if no strong matches (all scores < 2), use default trio: CEO + CTO + CPO
+2. **Find the decision anchor** — identify the primary decision being asked, separate from supporting constraints
+3. **Keyword match** — scan problem against each lens's `domains` and `triggers`
+4. **Downweight ambient constraints** — budget, timeline, team size, compliance, or risk details are supporting signals unless explicitly decision-driving
+5. **Score & rank** — count matches, but prefer lenses that match the anchor decision over lenses that only match surrounding constraints
+6. **Pairing boost** — if a top lens has `pairs_with` recommendations, boost those lenses by +0.5
+7. **Add strategy complement when needed** — if the decision is foundational and company-shaping, include the nearest strategy lens even when the wording is technical
+8. **Select top 2-4** — cover the anchor decision first, then only the strongest secondary tradeoffs
+9. **Fallback** — if no strong matches (all scores < 2), use default trio: CEO + CTO + CPO
+
+Example: for a question about "tech stack," CTO should be selected first and CEO should usually be included as the strategic counterpart. Add CISO only when security/compliance is itself part of the decision. Add CFO only when spend, runway, or ROI is being explicitly optimized.
 
 User-specified lenses always override automatic selection.
 
@@ -268,9 +276,11 @@ Every executive review produces a 5-section decision brief:
 
 1. **Individual Lens Positions** — GO/MODIFY/BLOCK verdicts with concerns, endorsements, and non-negotiables
 2. **Conflict Detection Summary** — Verdict alignment and conflict classification across 5 dimensions
-3. **Detailed Conflict Mapping** — Matrix view of each lens's position per dimension
-4. **Final Alignment After Resolution** — Changes to plan, unanimous agreements, deferred decisions, risk register
-5. **Final Summary Dashboard** — Executive summary with decision, tradeoffs, risks, mitigations, and confidence level
+3. **Detailed Conflict Mapping** — Stacked comparison of each lens's position per dimension
+4. **Final Alignment After Resolution** — Changes to plan, unanimous agreements, deferred decisions, assumptions, and risk register
+5. **Final Summary Dashboard** — Compact executive summary with decision, tradeoffs, risks, mitigations, and confidence level
+
+Presentation rule: keep the final brief narrow and readable. Prefer headings, labeled lines, and bullets instead of ASCII borders or wide markdown tables.
 
 Conflicts are classified into 5 types: Priority, Scope, Risk, Resource, and Fundamental. Types 1-4 are auto-resolved; Type 5 is escalated to the user.
 
