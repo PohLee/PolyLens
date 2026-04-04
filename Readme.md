@@ -84,17 +84,20 @@ Run pre-fight review on our pricing strategy
 
 ## 👥 The Lenses
 
-| Lens | Focus | Default | When It Fires |
-|------|-------|:-------:|---------------|
-| 🎯 **CEO** | Speed, growth, market direction | Yes | Pricing, go-to-market, roadmap |
-| ⚙️ **CTO** | Scalability, risk, system integrity | Yes | Tech stack, architecture, scalability |
-| 🧩 **CPO** | User value, UX, retention | Yes | Feature design, usability, product-market fit |
-| 🚀 **YC** | Clarity, fundability, simplicity | No | Fundraising, MVP scope, unit economics |
-| 📊 **CIO** | Operational efficiency, internal systems | No | Workflow automation, internal tools |
-| 📈 **CDO** | Data strategy, analytics, metrics | No | Data pipelines, ML, business intelligence |
-| 🔒 **CISO** | Security posture, compliance, risk | No | Auth, GDPR, SOC2, vulnerability |
-| 👤 **CXO** | Customer satisfaction, journey | No | NPS, churn, support, onboarding |
-| 💬 **CCO** | Team alignment, documentation | No | Developer experience, culture, communication |
+| Lens | Full Name | Focus | Default | When It Fires |
+|------|-----------|-------|:-------:|---------------|
+| 🎯 **CEO** | Chief Executive Officer | Speed, growth, market direction | Yes | Pricing, go-to-market, roadmap |
+| ⚙️ **CTO** | Chief Technology Officer | Scalability, risk, system integrity | Yes | Tech stack, architecture, scalability |
+| 🧩 **CPO** | Chief Product Officer | User value, UX, retention | Yes | Feature design, usability, product-market fit |
+| 💰 **CFO** | Chief Financial Officer | Financial sustainability, capital strategy | No | Budget, profitability, unit economics, fundraising |
+| 🔗 **COO** | Chief Operating Officer | Operations, supply chain, process optimization | No | Supply chain, vendor management, capacity planning |
+| 📣 **CMO** | Chief Marketing Officer | Marketing, brand, growth acquisition | No | Marketing campaigns, brand strategy, customer acquisition |
+| 🤝 **CBDO** | Chief Business Development Officer | Partnerships, revenue channels, strategic alliances | No | Partnerships, joint ventures, channel strategy |
+| 🚀 **YC** | Y Combinator | Clarity, fundability, simplicity | No | Fundraising, MVP scope, investor readiness |
+| 📊 **CIO** | Chief Information Officer | Operational efficiency, internal systems | No | Workflow automation, internal tools |
+| 📈 **CDO** | Chief Data Officer | Data strategy, analytics, metrics | No | Data pipelines, ML, business intelligence |
+| 🔒 **CISO** | Chief Information Security Officer | Security posture, compliance, risk | No | Auth, GDPR, SOC2, vulnerability |
+| 👤 **CXO** | Chief Experience Officer | Customer experience, UI/UX design, journey | No | NPS, churn, support, UI design, accessibility |
 
 **Default lenses** (CEO + CTO + CPO) activate when no strong keyword match is found.
 
@@ -167,34 +170,61 @@ Plus analytical frameworks: **SWOT**, **Porter's Five Forces**, **Jobs-to-be-Don
 
 ```
 polylens/
-├── skills/                          # 11 invocable skill files
-│   ├── polylens-executive-review.md # Orchestrator: full pipeline
-│   ├── polylens-pre-fight.md        # Orchestrator: adversarial mode
-│   ├── lens-ceo.md                  # Business & Strategy
-│   ├── lens-cto.md                  # Technical & Infrastructure
-│   ├── lens-cpo.md                  # Product & User Experience
-│   ├── lens-yc.md                   # Startup & Fundability
-│   ├── lens-cio.md                  # Information & Operations
-│   ├── lens-cdo.md                  # Data & Analytics
-│   ├── lens-ciso.md                 # Security & Compliance
-│   ├── lens-cxo.md                  # Customer Experience
-│   └── lens-cco.md                  # Communication & Culture
-├── engines/                         # Shared processing logic
-│   ├── collision.md                 # Conflict detection & classification
-│   └── synthesis.md                 # Resolution strategies & output
-├── prompts/                         # Centralized data & templates
-│   ├── lens-registry.md             # Lens metadata (domains, triggers, pairs)
-│   ├── lens-capabilities.md         # Shared toolset & frameworks
-│   ├── conflict-types.md            # 5 conflict type definitions
-│   └── output-template.md           # 5-section decision brief format
-└── package.json                     # npm package manifest
+├── skills/
+│   ├── polylens-executive-review.md  # Orchestrator: full pipeline
+│   ├── polylens-pre-fight.md         # Orchestrator: adversarial mode
+│   ├── lens-ceo/                     # Chief Executive Officer
+│   │   └── SKILL.md
+│   ├── lens-cto/                     # Chief Technology Officer
+│   │   └── SKILL.md
+│   ├── lens-cpo/                     # Chief Product Officer
+│   │   └── SKILL.md
+│   ├── lens-yc/                      # Y Combinator
+│   │   └── SKILL.md
+│   ├── lens-cio/                     # Chief Information Officer
+│   │   └── SKILL.md
+│   ├── lens-cdo/                     # Chief Data Officer
+│   │   └── SKILL.md
+│   ├── lens-ciso/                    # Chief Information Security Officer
+│   │   └── SKILL.md
+│   ├── lens-cxo/                     # Chief Experience Officer
+│   │   └── SKILL.md
+│   ├── lens-cfo/                     # Chief Financial Officer
+│   │   └── SKILL.md
+│   ├── lens-coo/                     # Chief Operating Officer
+│   │   └── SKILL.md
+│   ├── lens-cmo/                     # Chief Marketing Officer
+│   │   └── SKILL.md
+│   └── lens-cbdo/                    # Chief Business Development Officer
+│       └── SKILL.md
+├── engines/                          # Shared processing logic
+│   ├── collision.md                  # Conflict detection & classification
+│   └── synthesis.md                  # Resolution strategies & output
+├── prompts/                          # Centralized data & templates
+│   ├── lens-registry.md              # Lens metadata (domains, triggers, pairs)
+│   ├── lens-capabilities.md          # Shared toolset & frameworks
+│   ├── conflict-types.md             # 5 conflict type definitions
+│   └── output-template.md            # 5-section decision brief format
+└── package.json                      # npm package manifest
 ```
+
+### Lens Directory Structure
+
+Each lens lives in its own directory (`lens-<name>/SKILL.md`), enabling future extensions:
+
+| Subdirectory | Purpose |
+|--------------|---------|
+| `SKILL.md` | The lens definition — philosophy, directives, metrics, strategy, review process |
+| `scripts/` | Executable helpers (e.g., `calculate-dora-metrics.sh`, `check-vulnerabilities.py`) |
+| `reference/` | Domain frameworks and standards (e.g., `owasp-top-10.md`, `dora-metrics.md`) |
+| `checklists/` | Standalone audit checklists (e.g., `security-review-checklist.md`) |
+| `templates/` | Output artifacts (e.g., `incident-report-template.md`, `post-mortem-template.md`) |
 
 ### Three-Layer Design
 
 | Layer | Purpose | Files |
 |-------|---------|-------|
-| **Skills** | Individual lens prompts and orchestrators | `skills/*.md` |
+| **Skills** | Individual lens prompts and orchestrators | `skills/*/SKILL.md`, `skills/polylens-*.md` |
 | **Engines** | Shared collision detection and synthesis | `engines/*.md` |
 | **Prompts** | Lens registry, conflict taxonomy, templates | `prompts/*.md` |
 
@@ -204,8 +234,14 @@ polylens/
 
 PolyLens is designed for extensibility. Adding a lens requires **two files**:
 
-1. **Create the skill:** `skills/lens-<name>.md` (follow existing lens template)
+1. **Create the lens directory:** `skills/lens-<name>/SKILL.md` (follow existing lens template)
 2. **Register it:** Add entry to `prompts/lens-registry.md` with domains, triggers, pairs_with
+
+Optional subdirectories for heavier lenses:
+- `scripts/` — Executable helpers that pull live data
+- `reference/` — Domain frameworks and standards
+- `checklists/` — Standalone audit checklists
+- `templates/` — Output artifacts and report formats
 
 That's it. No changes to orchestrators or engines. The selection algorithm picks up new lenses automatically.
 

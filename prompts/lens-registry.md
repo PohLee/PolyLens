@@ -21,7 +21,7 @@ Each lens entry contains:
 - **focus:** Speed, growth, market direction, and competitive advantage
 - **domains:** business, strategy, market, growth, revenue, competition, pricing, go-to-market, roadmap
 - **triggers:** pricing strategy, go-to-market, roadmap prioritization, resource allocation, market direction, competitive positioning, business model, monetization, growth metrics
-- **pairs_with:** CTO, CPO, YC, CFO, COO
+- **pairs_with:** CTO, CPO, YC, CFO, COO, CBDO
 - **default:** true
 - **active:** true
 - **bias:** action > perfection
@@ -43,7 +43,7 @@ Each lens entry contains:
 - **focus:** User value, UX, retention, and product-market fit
 - **domains:** product, ux, user-research, feature-design, retention, engagement, product-market-fit
 - **triggers:** user experience, feature prioritization, user flow, onboarding, engagement metrics, retention, product-market fit, user research, usability
-- **pairs_with:** CXO, CEO, CCO
+- **pairs_with:** CXO, CEO
 - **default:** true
 - **active:** true
 - **bias:** product quality > internal efficiency
@@ -93,47 +93,58 @@ Each lens entry contains:
 - **bias:** security > convenience
 - **verdict_style:** GO if it's secure by design, MODIFY if it needs security guardrails, BLOCK if it introduces unacceptable risk
 
-### CXO — Customer Experience
+### CXO — Customer Experience & UI/UX Design
 
-- **focus:** Customer satisfaction, support, and journey optimization
-- **domains:** customer-experience, support, satisfaction, feedback, customer-journey, onboarding
-- **triggers:** customer journey, support flow, NPS score, customer satisfaction, feedback loop, onboarding experience, customer retention, churn reduction
-- **pairs_with:** CPO, CCO
+- **focus:** Customer satisfaction, UI/UX design quality, support, and journey optimization
+- **domains:** customer-experience, ui-design, ux, accessibility, design-system, support, satisfaction, feedback, customer-journey, onboarding, visual-design, interaction-design
+- **triggers:** customer journey, UI design, UX review, support flow, NPS score, customer satisfaction, feedback loop, onboarding experience, customer retention, churn reduction, visual design, accessibility, design system, wireframe, mockup
+- **pairs_with:** CPO
 - **default:** false
 - **active:** true
 - **bias:** customer satisfaction > internal convenience
 - **verdict_style:** GO if customers will notice and appreciate it, MODIFY if the journey has friction, BLOCK if it degrades customer experience
 
-### CCO — Communication & Culture
+### COO — Operations & Supply Chain
 
-- **focus:** Team alignment, documentation, and developer experience
-- **domains:** communication, culture, documentation, developer-experience, team-alignment, org-structure
-- **triggers:** team alignment, documentation strategy, developer experience, org structure, team onboarding, communication process, knowledge sharing, developer productivity
-- **pairs_with:** CIO, CPO, CXO
-- **default:** false
-- **active:** true
-- **bias:** clarity > speed
-- **verdict_style:** GO if it improves team clarity, MODIFY if communication needs work, BLOCK if it creates confusion
-
-### COO — Operations & Supply Chain *(future)*
-
-- **focus:** Operational scaling, supply chain, and process optimization
-- **domains:** operations, supply-chain, logistics, process-optimization, vendor-management
-- **triggers:** operational efficiency, supply chain, logistics, process redesign, vendor management, operational scaling
+- **focus:** Operational scaling, supply chain resilience, process optimization, and vendor management
+- **domains:** operations, supply-chain, logistics, process-optimization, vendor-management, capacity-planning, quality-assurance, business-continuity
+- **triggers:** operational efficiency, supply chain, logistics, process redesign, vendor management, operational scaling, capacity planning, quality assurance, business continuity, incident response
 - **pairs_with:** CIO, CEO, CFO
 - **default:** false
-- **active:** false
+- **active:** true
 - **bias:** process efficiency > ad-hoc solutions
 - **verdict_style:** GO if it streamlines operations, MODIFY if process gaps exist, BLOCK if it creates operational bottlenecks
 
-### CFO — Finance & Budget *(future)*
+### CMO — Marketing, Brand & Growth Acquisition
 
-- **focus:** Financial sustainability, budget allocation, and profitability
-- **domains:** finance, budget, cost, revenue, profitability, unit-economics, financial-planning
-- **triggers:** budget allocation, cost analysis, pricing strategy, profitability analysis, burn rate, unit economics, financial modeling, ROI, cost optimization
-- **pairs_with:** CEO, COO, YC
+- **focus:** Brand strategy, customer acquisition, marketing ROI, and growth marketing
+- **domains:** marketing, brand, acquisition, content-strategy, growth-marketing, seo, paid-advertising, social-media, market-positioning
+- **triggers:** marketing campaign, brand strategy, customer acquisition, content marketing, SEO strategy, social media, paid advertising, brand positioning, growth marketing, marketing budget, go-to-market messaging
+- **pairs_with:** CEO, CXO, CBDO
 - **default:** false
-- **active:** false
+- **active:** true
+- **bias:** measurable growth > brand awareness
+- **verdict_style:** GO if it drives measurable acquisition, MODIFY if channels or messaging need refinement, BLOCK if marketing spend lacks feedback loops
+
+### CBDO — Partnerships, Revenue Channels & Strategic Alliances
+
+- **focus:** Strategic partnerships, channel strategy, revenue diversification, and market expansion
+- **domains:** partnerships, alliances, channel-strategy, revenue-diversification, market-expansion, joint-ventures, distribution, co-marketing
+- **triggers:** partnership agreement, strategic alliance, channel strategy, revenue diversification, market expansion, joint venture, distribution deal, co-marketing, reseller agreement, platform integration partnership
+- **pairs_with:** CEO, CMO, CFO
+- **default:** false
+- **active:** true
+- **bias:** strategic leverage > revenue volume
+- **verdict_style:** GO if the partnership creates asymmetric value, MODIFY if terms or integration need work, BLOCK if incentives are misaligned or channel conflict is high
+
+### CFO — Financial Sustainability & Capital Strategy
+
+- **focus:** Financial sustainability, budget allocation, capital efficiency, and profitability
+- **domains:** finance, budget, cost, revenue, profitability, unit-economics, financial-planning, capital-structure, fundraising
+- **triggers:** budget allocation, cost analysis, pricing strategy, profitability analysis, burn rate, unit economics, financial modeling, ROI, cost optimization, fundraising, capital raise, financial planning
+- **pairs_with:** CEO, COO, CBDO
+- **default:** false
+- **active:** true
 - **bias:** financial sustainability > growth at all costs
 - **verdict_style:** GO if it's financially sound, MODIFY if costs need control, BLOCK if it's financially unsustainable
 
