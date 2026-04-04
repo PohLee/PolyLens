@@ -5,7 +5,7 @@ Detects, classifies, and structures disagreements between lens positions.
 ## Input
 
 The collision engine receives:
-- List of lens positions (each with Verdict, concerns, endorsements, non-negotiables)
+- List of lens positions (each with Verdict, impacts, decision framing for Scope/Timeline/Resource/Risk/Success Criteria, assumptions/unknowns, concerns, endorsements, non-negotiables)
 - The original problem/plan being reviewed
 
 ## Process
@@ -19,13 +19,13 @@ Extract the GO/MODIFY/BLOCK verdict from each lens position.
 ```
 If all verdicts are GO → UNANIMOUS (skip to consensus output)
 If all verdicts are identical (all MODIFY or all BLOCK) → UNANIMOUS
-If 2+ lenses share a verdict, others differ → 2-vs-1 (or N-vs-M)
+If 2+ lenses share a verdict, others differ → SPLIT
 If all verdicts differ → ALL DISAGREE
 ```
 
 ### Step 3: Build Conflict Map
 
-For each dimension, extract each lens's position:
+For each dimension, extract each lens's structured position from the decision-framing block first. Use concerns, endorsements, and reasoning only to clarify the one-line entry if needed.
 
 | Dimension | What to Extract |
 |---|---|
@@ -35,7 +35,16 @@ For each dimension, extract each lens's position:
 | Risk | What each lens flags as risky and their severity rating |
 | Success Criteria | What each lens considers "done" or "successful" |
 
-### Step 4: Classify Each Conflict
+### Step 4: Deduplicate Conflicts
+
+Before counting conflicts, merge duplicates that describe the same underlying disagreement:
+
+- If the same issue appears in multiple dimensions, keep one canonical conflict entry and list all affected dimensions.
+- If two lenses restate the same objection in different words, count it once.
+- If wording differs but the required user decision is the same, count it once.
+- Only create separate conflicts when resolving one would not resolve the other.
+
+### Step 5: Classify Each Conflict
 
 For each disagreement found in the conflict map, classify it using `prompts/conflict-types.md`:
 
@@ -45,27 +54,28 @@ For each disagreement found in the conflict map, classify it using `prompts/conf
 4. **Resource (Type 4):** Disagreement about time/budget/effort
 5. **Fundamental (Type 5):** Disagreement about core approach
 
-### Step 5: Produce Conflict Detection Summary
+### Step 6: Produce Conflict Detection Summary
 
 Output:
 
 ```
 VERDICT ALIGNMENT
 =================
-<Lens1>: [GO / MODIFY / BLOCK]
-<Lens2>: [GO / MODIFY / BLOCK]
-<Lens3>: [GO / MODIFY / BLOCK]
-Alignment: [UNANIMOUS / 2-vs-1 / ALL DISAGREE]
+<Lens A>: [GO / MODIFY / BLOCK]
+<Lens B>: [GO / MODIFY / BLOCK]
+[<Lens C>: [GO / MODIFY / BLOCK]]
+[<Lens D>: [GO / MODIFY / BLOCK]]
+Alignment: [UNANIMOUS / SPLIT / ALL DISAGREE]
 
 CONFLICT MAP
 ============
-Dimension       | <Lens1> | <Lens2> | <Lens3>
-----------------|---------|---------|--------
-Scope           | [view]  | [view]  | [view]
-Timeline        | [view]  | [view]  | [view]
-Resource        | [view]  | [view]  | [view]
-Risk            | [view]  | [view]  | [view]
-Success Criteria| [view]  | [view]  | [view]
+Dimension        | <Lens A> | <Lens B> | [<Lens C>] | [<Lens D>]
+-----------------|----------|----------|------------|------------
+Scope            | [view]   | [view]   | [view]     | [view]
+Timeline         | [view]   | [view]   | [view]     | [view]
+Resource         | [view]   | [view]   | [view]     | [view]
+Risk             | [view]   | [view]   | [view]     | [view]
+Success Criteria | [view]   | [view]   | [view]     | [view]
 
 CONFLICTS DETECTED: [N]
   Type 1 (Priority):  [N]
@@ -73,6 +83,13 @@ CONFLICTS DETECTED: [N]
   Type 3 (Risk):      [N]
   Type 4 (Resource):  [N]
   Type 5 (Fundamental): [N]
+
+CANONICAL CONFLICT LIST
+=======================
+1. [Conflict statement]
+   Type: [1 / 2 / 3 / 4 / 5]
+   Lenses: [list]
+   Affected dimensions: [Scope / Timeline / Resource / Risk / Success Criteria]
 ```
 
 ## Special Cases
@@ -80,3 +97,4 @@ CONFLICTS DETECTED: [N]
 - **UNANIMOUS GO:** Output "All lenses agree — no conflicts detected. Proceeding to synthesis for final brief."
 - **UNANIMOUS BLOCK:** Output "All lenses agree this plan should be blocked. Critical issues: [list]."
 - **Single lens review:** Skip collision entirely — output "Single lens review — no collision analysis applicable."
+- **Near-match wording:** If lenses differ only in phrasing but not in practical action, do not classify it as a conflict.

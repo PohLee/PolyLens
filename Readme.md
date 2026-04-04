@@ -2,7 +2,7 @@
 
 > **An AI boardroom in your terminal.** Multi-perspective reasoning for high-stakes decisions.
 
-PolyLens simulates executive-level thinking — CEO, CTO, CPO, and more — to analyze problems, surface disagreements, and resolve them into clear, actionable decisions. Implemented as pure markdown skills with zero code dependencies. Works with any AI coding agent that supports skills.
+PolyLens simulates executive-level thinking — CEO, CTO, CPO, and more — to analyze problems, surface disagreements, and resolve them into clear, actionable decisions. Implemented as pure markdown skills with no runtime code or install scripts. Works with any AI coding agent that supports skills.
 
 ---
 
@@ -20,18 +20,10 @@ PolyLens fixes this by applying multiple **lenses**, forcing structured **collis
 
 ## 📦 Installation
 
-### Via npm (Recommended)
+Clone or download this repository, then link the `skills/` directory into your agent's skills folder.
 
 ```bash
-npm install polylens
-```
-
-Then symlink the skills directory into your agent's skills folder (see platform-specific paths below).
-
-### Via Git
-
-```bash
-git clone https://github.com/your-org/polylens.git
+git clone <repository-url> polylens
 cd polylens
 ```
 
@@ -43,7 +35,7 @@ cd polylens
 | **Claude Code** | `ln -s "$(pwd)/skills" ~/.claude/skills/polylens` | `New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\polylens" -Target "$(Get-Location)\skills"` |
 | **Codex** | `ln -s "$(pwd)/skills" ~/.codex/skills/polylens` | `New-Item -ItemType Junction -Path "$env:USERPROFILE\.codex\skills\polylens" -Target "$(Get-Location)\skills"` |
 | **RooCode** | `ln -s "$(pwd)/skills" ~/.roo/skills/polylens` | `New-Item -ItemType Junction -Path "$env:USERPROFILE\.roo\skills\polylens" -Target "$(Get-Location)\skills"` |
-| **Copilot** | Settings → Copilot → Custom Instructions → add skills path | Same via VS Code Settings UI |
+| **Copilot** | Follow your Copilot skill/custom-instruction path conventions and point them at this repo's `skills/` directory | Same via VS Code Settings UI |
 
 > **Tip:** After installation, verify skills are detected by asking your agent: *"What skills do you have available?"*
 
@@ -205,7 +197,7 @@ polylens/
 │   ├── lens-capabilities.md          # Shared toolset & frameworks
 │   ├── conflict-types.md             # 5 conflict type definitions
 │   └── output-template.md            # 5-section decision brief format
-└── package.json                      # npm package manifest
+└── README.md                         # Project overview
 ```
 
 ### Lens Directory Structure
@@ -260,8 +252,19 @@ Contributions welcome:
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test by invoking the skill in your AI agent
-5. Submit a pull request
+4. Run `python3 tools/validate_markdown_contracts.py`
+5. Test by invoking the skill in your AI agent
+6. Submit a pull request
+
+### Contract Validation
+
+PolyLens includes a repo-native validator that checks the working markdown contract across the lens registry, active lens skills, orchestrators, engines, and output templates.
+
+```bash
+python3 tools/validate_markdown_contracts.py
+```
+
+The command exits non-zero when shared fields, lens inventory, or orchestration rules drift out of sync. The same check also runs automatically in GitHub Actions on pushes and pull requests.
 
 ---
 

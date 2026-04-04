@@ -25,32 +25,34 @@ Read the lens registry at `prompts/lens-registry.md`.
 
 **If no lenses specified:** Run the selection algorithm:
 1. Filter active lenses: Only consider lenses where `active: true`
-2. Scan the problem description against each lens's `domains` and `triggers` from the registry
-3. Score lenses by match count
-4. Boost scores for lenses in `pairs_with` of top-scoring lenses (+0.5, only if active)
-5. Select top 2-4 lenses (minimum 2, maximum 4)
-6. If no strong matches (all scores < 2), use default lenses (CEO + CTO + CPO)
+2. Score explicit trigger phrase matches at +2 and domain/theme matches at +1
+3. Boost scores for lenses in `pairs_with` of top-scoring lenses (+0.5, only if active)
+4. Prefer a balanced set of 2-4 lenses that covers the dominant business, product, technical, operational, financial, or risk themes present in the prompt
+5. Break ties deterministically in this order: explicit user wording match, trigger score, `default: true`, registry order
+6. If the prompt is ambiguous and no lens scores above 2, use the default lenses marked in the registry
 
 Announce which lenses were selected and why.
 
 ### Step 2: Run Each Lens
 
-For each selected lens, read the corresponding `skills/lens-<name>.md` file and follow its review process.
+For each selected lens, read the corresponding `skills/lens-<name>/SKILL.md` file and follow its review process.
 
 Run lenses sequentially to preserve context. For each lens:
 1. Apply the lens's philosophy, directives, and cognitive patterns
 2. Optionally use tools from `prompts/lens-capabilities.md` if it would strengthen the analysis
 3. Produce the lens position in the required format (between `---BEGIN <LENS> POSITION---` and `---END <LENS> POSITION---` delimiters)
-4. Provide reasoning paragraphs
+4. Include the structured decision-framing block so Scope, Timeline, Resource, Risk, Success Criteria, and Assumptions / Unknowns are explicit
+5. Provide concise reasoning paragraphs
 
 ### Step 3: Collision Detection
 
 Run the collision engine by reading `engines/collision.md` and following its process:
 1. Collect all lens verdicts
-2. Determine alignment status (UNANIMOUS / 2-vs-1 / ALL DISAGREE)
-3. Build conflict map across dimensions (Scope, Timeline, Resource, Risk, Success Criteria)
-4. Classify each conflict by type (Priority, Scope, Risk, Resource, Fundamental)
-5. Reference `prompts/conflict-types.md` for type definitions
+2. Determine alignment status (UNANIMOUS / SPLIT / ALL DISAGREE)
+3. Build the conflict map from the structured decision-framing fields (Scope, Timeline, Resource, Risk, Success Criteria)
+4. Deduplicate conflicts that describe the same underlying disagreement
+5. Classify each canonical conflict by type (Priority, Scope, Risk, Resource, Fundamental)
+6. Reference `prompts/conflict-types.md` for type definitions
 
 Output the Conflict Detection Summary.
 
@@ -58,27 +60,28 @@ Output the Conflict Detection Summary.
 
 Run the synthesis engine by reading `engines/synthesis.md` and following its process:
 1. Apply resolution strategies based on conflict type
-2. For Type 5 (Fundamental) conflicts, escalate to user for decision
-3. Assemble the Final Alignment section
-4. Assemble the Final Summary Dashboard
+2. For Type 5 (Fundamental) conflicts, output the decision split format and stop for user input
+3. Assemble the Final Alignment section only when no user decision is pending
+4. Assemble the Final Summary Dashboard only when the brief is complete
 
 ### Step 5: Output Decision Brief
 
-Produce the complete 5-section decision brief following the template in `prompts/output-template.md`:
+Produce the decision brief following the template in `prompts/output-template.md`:
 
 1. Individual Lens Positions
 2. Conflict Detection Summary
 3. Detailed Conflict Mapping
-4. Final Alignment After Resolution
-5. Final Summary Dashboard
+4. Final Alignment After Resolution, or `DECISION SPLIT (AWAITING USER INPUT)` when Type 5 remains open
+5. Final Summary Dashboard only when the final alignment is complete
 
 ## Error Handling
 
 - **Problem too vague:** Ask clarifying questions before running lenses
-- **No matching lenses:** Fall back to default trio (CEO + CTO + CPO)
-- **All lenses agree:** Skip collision engine, output consensus brief
+- **No matching lenses:** Fall back to the default set from the registry
+- **All lenses agree:** Record a no-conflict collision summary, then output a consensus brief
 - **Unresolvable conflict:** Escalate to user with split recommendations
 - **Context window limits:** Run lenses sequentially, summarize between steps
+- **Ambiguous tie between lenses:** Use deterministic tie-break rules; do not pick arbitrarily
 
 ## Important Rules
 
@@ -89,3 +92,4 @@ Produce the complete 5-section decision brief following the template in `prompts
 - Always read `prompts/output-template.md` before formatting output
 - Never skip the collision step even if lenses mostly agree
 - Never auto-resolve Type 5 (Fundamental) conflicts — escalate to user
+- If a user decision is still needed, stop after the partial brief and wait for input

@@ -2,6 +2,8 @@
 
 Each lens declares its metadata for context-aware selection. The orchestrator reads this file to automatically select the 2-4 most relevant lenses based on problem context.
 
+Selection should be deterministic. If two lenses are equally plausible, prefer the one with the stronger trigger match, then the closer user wording match, then the stronger default signal, then registry order.
+
 ## Format
 
 Each lens entry contains:
@@ -109,7 +111,7 @@ Each lens entry contains:
 - **focus:** Operational scaling, supply chain resilience, process optimization, and vendor management
 - **domains:** operations, supply-chain, logistics, process-optimization, vendor-management, capacity-planning, quality-assurance, business-continuity
 - **triggers:** operational efficiency, supply chain, logistics, process redesign, vendor management, operational scaling, capacity planning, quality assurance, business continuity, incident response
-- **pairs_with:** CIO, CEO, CFO
+- **pairs_with:** CIO, CEO, CFO, CAgO
 - **default:** false
 - **active:** true
 - **bias:** process efficiency > ad-hoc solutions
@@ -151,8 +153,9 @@ Each lens entry contains:
 ## Selection Algorithm (for orchestrator reference)
 
 1. **Filter active lenses:** Only consider lenses where `active: true`
-2. **Keyword match:** Scan problem description against each lens's `domains` and `triggers`
-3. **Score lenses:** Count matches, rank by relevance score
+2. **Score explicit wording:** Exact or near-exact matches against `triggers` score +2; domain/theme matches score +1
+3. **Rank by relevance:** Sum the scores and keep a note of which user constraints each lens covers
 4. **Apply pairing rules:** If a top lens has `pairs_with` recommendations, boost those lenses' scores by 0.5 (only if they are also active)
-5. **Select top 2-4:** Pick highest-scoring lenses, minimum 2, maximum 4
-6. **Fallback:** If no strong matches (all scores < 2), use lenses marked `default: true`
+5. **Prefer coverage:** Select 2-4 lenses that cover the prompt's main business, product, technical, operational, financial, or risk themes rather than stacking near-duplicates
+6. **Break ties deterministically:** Use this order: stronger trigger match, more direct user wording match, `default: true`, registry order
+7. **Fallback:** If no strong matches (all scores < 2), use lenses marked `default: true`

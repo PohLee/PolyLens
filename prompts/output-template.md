@@ -12,6 +12,13 @@ Each lens produces this output:
 Verdict: [GO / MODIFY / BLOCK]
 Decision context impact: [LOW / MEDIUM / HIGH]
 Lens domain impact: [LOW / MEDIUM / HIGH]
+Decision framing:
+- Scope: [EXPAND / HOLD / NARROW / REFRAME] — [what must be in or out]
+- Timeline: [NOW / PHASED / DEFER / BLOCKED] — [timing, sequencing, or trigger]
+- Resource: [LIGHT / MODERATE / HEAVY / UNKNOWN] — [team, budget, or effort implication]
+- Risk: [LOW / MEDIUM / HIGH / CRITICAL] — [primary failure mode]
+- Success Criteria: [what must be true to call this successful]
+- Assumptions / Unknowns: [critical assumption, missing input, or "None material"]
 Key concerns:
 - [concern 1]
 - [concern 2]
@@ -25,21 +32,23 @@ Non-negotiables: [what must not change — security, stability, etc.]
 **Definitions:**
 - **Decision context impact:** Impact on the specific problem being reviewed
 - **Lens domain impact:** Impact on the lens's area of expertise (e.g., for CTO: technical impact on the system)
+- **Decision framing:** Compact, structured inputs the collision and synthesis engines can compare directly across lenses
 
 ## Section 2: Conflict Detection Summary
 
 ```
 VERDICT ALIGNMENT
 =================
-<Lens1>: [GO / MODIFY / BLOCK]
-<Lens2>: [GO / MODIFY / BLOCK]
-<Lens3>: [GO / MODIFY / BLOCK]
-Alignment: [UNANIMOUS / 2-vs-1 / ALL DISAGREE]
+<Lens A>: [GO / MODIFY / BLOCK]
+<Lens B>: [GO / MODIFY / BLOCK]
+[<Lens C>: [GO / MODIFY / BLOCK]]
+[<Lens D>: [GO / MODIFY / BLOCK]]
+Alignment: [UNANIMOUS / SPLIT / ALL DISAGREE]
 ```
 
 **Alignment status definitions:**
 - **UNANIMOUS:** All lenses share the same verdict
-- **2-vs-1:** Two lenses agree, one dissents
+- **SPLIT:** One or more lenses dissent, but there is at least one shared verdict
 - **ALL DISAGREE:** Each lens has a different verdict
 
 ## Section 3: Detailed Conflict Mapping
@@ -49,14 +58,16 @@ Matrix view across dimensions. Each cell contains the lens's position on that di
 ```
 CONFLICT MAP
 ============
-Dimension       | <Lens1>           | <Lens2>           | <Lens3>
-----------------|-------------------|-------------------|------------------
-Scope           | [GO + reason]     | [MODIFY + reason] | [GO + reason]
-Timeline        | [GO + reason]     | [GO + reason]     | [BLOCK + reason]
-Resource        | [GO + reason]     | [MODIFY + reason] | [GO + reason]
-Risk            | [GO + reason]     | [GO + reason]     | [GO + reason]
-Success Criteria| [GO + reason]     | [GO + reason]     | [GO + reason]
+Dimension        | <Lens A>          | <Lens B>          | [<Lens C>]        | [<Lens D>]
+-----------------|-------------------|-------------------|-------------------|-------------------
+Scope            | [stance + reason] | [stance + reason] | [stance + reason] | [stance + reason]
+Timeline         | [stance + reason] | [stance + reason] | [stance + reason] | [stance + reason]
+Resource         | [stance + reason] | [stance + reason] | [stance + reason] | [stance + reason]
+Risk             | [stance + reason] | [stance + reason] | [stance + reason] | [stance + reason]
+Success Criteria | [stance + reason] | [stance + reason] | [stance + reason] | [stance + reason]
 ```
+
+Use only the columns needed for the selected 2-4 lenses.
 
 ## Section 4: Final Alignment After Resolution
 
@@ -66,11 +77,13 @@ ALIGNED PLAN
 Original plan: [title]
 Review date: [date]
 Branch: [branch, if applicable — optional]
+Lenses involved: [2-4 lenses]
 
 VERDICT ALIGNMENT (after resolution):
-  <Lens1>: [GO / MODIFY / BLOCK]
-  <Lens2>: [GO / MODIFY / BLOCK]
-  <Lens3>: [GO / MODIFY / BLOCK]
+  <Lens A>: [GO / MODIFY / BLOCK]
+  <Lens B>: [GO / MODIFY / BLOCK]
+  [<Lens C>: [GO / MODIFY / BLOCK]]
+  [<Lens D>: [GO / MODIFY / BLOCK]]
 
 CONFLICTS RESOLVED: [N] of [N]
   Auto-resolved: [N]
@@ -93,6 +106,10 @@ DEFERRED DECISIONS
 ===================
 1. [Decision] — deferred because [reason]. Revisit: [when/trigger].
 
+ASSUMPTIONS / UNKNOWNS
+======================
+1. [Open assumption or missing information] — owner: [lens or user], impact: [LOW / MEDIUM / HIGH], next step: [how to resolve]
+
 RISK REGISTER
 ==============
 RISK              | SOURCE  | SEVERITY | LIKELIHOOD | MITIGATION
@@ -101,7 +118,35 @@ RISK              | SOURCE  | SEVERITY | LIKELIHOOD | MITIGATION
 [description]     | [lens]  | [severity] | [likelihood] | [plan]
 ```
 
+When a Type 5 conflict needs a user decision, do not output this section as if it were complete. Output the partial-brief split below and stop for user input:
+
+```
+DECISION SPLIT (AWAITING USER INPUT)
+====================================
+Decision needed: [the irreducible choice]
+Why escalation happened: [why the lenses could not auto-resolve it]
+
+OPTION A
+--------
+Supported by: [lens list]
+What changes: [plan shape under this option]
+Upside: [benefits]
+Downside: [costs / risks]
+
+OPTION B
+--------
+Supported by: [lens list]
+What changes: [plan shape under this option]
+Upside: [benefits]
+Downside: [costs / risks]
+
+What the user should answer: [specific decision prompt]
+What remains blocked until then: [critical unresolved item]
+```
+
 ## Section 5: Final Summary Dashboard
+
+Use this section only when the brief is complete and no user decision is still pending.
 
 ```
 +====================================================================+
@@ -114,7 +159,7 @@ RISK              | SOURCE  | SEVERITY | LIKELIHOOD | MITIGATION
 | Lenses involved    | [list of lenses]                              |
 +--------------------------------------------------------------------+
 | FINAL DECISION                                                      |
-| [Clear, actionable recommendation with reasoning]                  |
+| [Clear recommendation with reasoning]                              |
 |                                                                     |
 | KEY TRADEOFFS                                                       |
 | - [Tradeoff 1]: Chose [X] because [reason]                         |
@@ -132,9 +177,10 @@ RISK              | SOURCE  | SEVERITY | LIKELIHOOD | MITIGATION
 | CONFIDENCE LEVEL: [High / Medium / Low]                            |
 +--------------------------------------------------------------------+
 | INDIVIDUAL POSITIONS                                                |
-| <Lens1> verdict | [GO / MODIFY / BLOCK] + [key concern]            |
-| <Lens2> verdict | [GO / MODIFY / BLOCK] + [key concern]            |
-| <Lens3> verdict | [GO / MODIFY / BLOCK] + [key concern]            |
+| <Lens A> verdict | [GO / MODIFY / BLOCK] + [key concern]           |
+| <Lens B> verdict | [GO / MODIFY / BLOCK] + [key concern]           |
+| [<Lens C> verdict | [GO / MODIFY / BLOCK] + [key concern]]         |
+| [<Lens D> verdict | [GO / MODIFY / BLOCK] + [key concern]]         |
 +--------------------------------------------------------------------+
 | CONFLICT RESOLUTION                                                 |
 | Total conflicts    | [N]                                           |
@@ -142,13 +188,14 @@ RISK              | SOURCE  | SEVERITY | LIKELIHOOD | MITIGATION
 | Type 2 (Scope)     | [N] resolved                                  |
 | Type 3 (Risk)      | [N] resolved                                  |
 | Type 4 (Resource)  | [N] resolved                                  |
-| Type 5 (Fundamental)| [N] resolved / [N] UNRESOLVED               |
+| Type 5 (Fundamental)| [N] resolved / [N] awaiting input           |
 <!-- Conflict types defined in prompts/conflict-types.md -->
 +--------------------------------------------------------------------+
 | OUTCOMES                                                            |
 | Changes to plan    | [N] items                                     |
 | Unanimous agreements| [N] items                                    |
 | Deferred decisions | [N] items                                     |
+| Assumptions open   | [N] items                                     |
 | Risks flagged      | [N] items ([N] High severity)                 |
 | Unresolved (BLOCK) | [N] items — plan cannot proceed               |
 +====================================================================+
@@ -156,6 +203,6 @@ RISK              | SOURCE  | SEVERITY | LIKELIHOOD | MITIGATION
 
 ## Confidence Level Criteria
 
-- **High:** All selected lenses agree (UNANIMOUS) or all conflicts are auto-resolved
-- **Medium:** Some disagreement but synthesis found acceptable compromise; no unresolved Type 5 conflicts
-- **Low:** Strong disagreement, unresolved Type 5 conflicts, or high-risk tradeoffs accepted
+- **High:** No unresolved Type 5 conflict, no material assumptions left open, no accepted high-severity risk without mitigation, and no deferred decision that blocks execution
+- **Medium:** Some disagreement or deferred decisions remain, but the execution path is still clear and all critical risks or assumptions have owners and mitigation
+- **Low:** User decision still required, material assumptions remain unresolved, accepted high-severity risks lack sufficient mitigation, or key execution decisions are deferred

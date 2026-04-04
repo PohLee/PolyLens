@@ -48,9 +48,9 @@ The collision engine classifies disagreements between lenses into five types. Ea
 
 **Example:** CEO wants to build in-house; CTO wants to buy/adopt existing solution.
 
-**Resolution Strategy:** Escalate to user with split recommendations. Present both positions with their reasoning, tradeoffs, and consequences. The user must decide — this cannot be auto-resolved.
+**Resolution Strategy:** Escalate to user with split recommendations. Present both positions with their reasoning, tradeoffs, and consequences in a partial brief using the decision split format. Stop and wait for the user's decision — this cannot be auto-resolved.
 
-**Detection Pattern:** Lenses have opposing GO/BLOCK verdicts with irreconcilable reasoning.
+**Detection Pattern:** Lenses have opposing GO/BLOCK verdicts or mutually exclusive non-negotiables with irreconcilable reasoning.
 
 ## Conflict Classification Table
 

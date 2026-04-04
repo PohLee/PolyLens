@@ -234,6 +234,13 @@ CXO POSITION
 Verdict: [GO / MODIFY / BLOCK]
 Decision context impact: [LOW / MEDIUM / HIGH]  # Impact on the overall project
 Lens domain impact: [LOW / MEDIUM / HIGH]       # Impact on customer experience specifically
+Decision framing:
+- Scope: [EXPAND / HOLD / NARROW / REFRAME] — [what must be in or out]
+- Timeline: [NOW / PHASED / DEFER / BLOCKED] — [timing, sequencing, or trigger]
+- Resource: [LIGHT / MODERATE / HEAVY / UNKNOWN] — [team, budget, or effort implication]
+- Risk: [LOW / MEDIUM / HIGH / CRITICAL] — [primary failure mode]
+- Success Criteria: [what must be true to call this successful]
+- Assumptions / Unknowns: [critical assumption, missing input, or "None material"]
 Key concerns: (1-3 concerns, most important first)
 - [concern 1]
 - [concern 2]
