@@ -9,6 +9,7 @@ PolyLens simulates executive-level thinking — CEO, CTO, CPO, and more — to a
 ## ✨ Why PolyLens?
 
 Most decisions fail not because of lack of intelligence, but because:
+
 - **Perspectives are missing** — you're thinking like an engineer when you should think like a CEO
 - **Tradeoffs are invisible** — speed vs. quality, short-term vs. long-term
 - **Disagreements go unresolved** — tension is buried, not structured
@@ -19,41 +20,30 @@ PolyLens fixes this by applying multiple **lenses**, forcing structured **collis
 
 ## 📦 Installation
 
-### OpenCode
+### Via npm (Recommended)
+
+```bash
+npm install polylens
+```
+
+Then symlink the skills directory into your agent's skills folder (see platform-specific paths below).
+
+### Via Git
 
 ```bash
 git clone https://github.com/your-org/polylens.git
-ln -s "$(pwd)/polylens/skills" ~/.config/opencode/skills/polylens
+cd polylens
 ```
 
-### Claude Code
+### Platform-Specific Setup
 
-```bash
-git clone https://github.com/your-org/polylens.git
-ln -s "$(pwd)/polylens/skills" ~/.claude/skills/polylens
-```
-
-### Codex (OpenAI)
-
-```bash
-git clone https://github.com/your-org/polylens.git
-ln -s "$(pwd)/polylens/skills" ~/.codex/skills/polylens
-```
-
-### RooCode (Roo Cline)
-
-```bash
-git clone https://github.com/your-org/polylens.git
-ln -s "$(pwd)/polylens/skills" ~/.roo/skills/polylens
-```
-
-### GitHub Copilot (VS Code)
-
-```bash
-git clone https://github.com/your-org/polylens.git
-# In VS Code: Settings → Copilot → Custom Instructions → Add path to skills
-# Or: create .github/copilot-instructions.md and reference the skills directory
-```
+| Agent | macOS / Linux | Windows (PowerShell) |
+|---|---|---|
+| **OpenCode** | `ln -s "$(pwd)/skills" ~/.config/opencode/skills/polylens` | `New-Item -ItemType Junction -Path "$env:USERPROFILE\.config\opencode\skills\polylens" -Target "$(Get-Location)\skills"` |
+| **Claude Code** | `ln -s "$(pwd)/skills" ~/.claude/skills/polylens` | `New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\polylens" -Target "$(Get-Location)\skills"` |
+| **Codex** | `ln -s "$(pwd)/skills" ~/.codex/skills/polylens` | `New-Item -ItemType Junction -Path "$env:USERPROFILE\.codex\skills\polylens" -Target "$(Get-Location)\skills"` |
+| **RooCode** | `ln -s "$(pwd)/skills" ~/.roo/skills/polylens` | `New-Item -ItemType Junction -Path "$env:USERPROFILE\.roo\skills\polylens" -Target "$(Get-Location)\skills"` |
+| **Copilot** | Settings → Copilot → Custom Instructions → add skills path | Same via VS Code Settings UI |
 
 > **Tip:** After installation, verify skills are detected by asking your agent: *"What skills do you have available?"*
 
@@ -95,25 +85,18 @@ Run pre-fight review on our pricing strategy
 ## 👥 The Lenses
 
 | Lens | Focus | Default | When It Fires |
-|:---:|---|:---:|---|
-| 🎯 **CEO** | Speed, growth, market direction | ✅ | Pricing, go-to-market, roadmap |
-| ⚙️ **CTO** | Scalability, risk, system integrity | ✅ | Tech stack, architecture, scalability |
-| 🧩 **CPO** | User value, UX, retention | ✅ | Feature design, usability, product-market fit |
-| 🚀 **YC** | Clarity, fundability, simplicity | | Fundraising, MVP scope, unit economics |
-| 📊 **CIO** | Operational efficiency, internal systems | | Workflow automation, internal tools |
-| 📈 **CDO** | Data strategy, analytics, metrics | | Data pipelines, ML, business intelligence |
-| 🔒 **CISO** | Security posture, compliance, risk | | Auth, GDPR, SOC2, vulnerability |
-| 👤 **CXO** | Customer satisfaction, journey | | NPS, churn, support, onboarding |
-| 💬 **CCO** | Team alignment, documentation | | Developer experience, culture, communication |
+|------|-------|:-------:|---------------|
+| 🎯 **CEO** | Speed, growth, market direction | Yes | Pricing, go-to-market, roadmap |
+| ⚙️ **CTO** | Scalability, risk, system integrity | Yes | Tech stack, architecture, scalability |
+| 🧩 **CPO** | User value, UX, retention | Yes | Feature design, usability, product-market fit |
+| 🚀 **YC** | Clarity, fundability, simplicity | No | Fundraising, MVP scope, unit economics |
+| 📊 **CIO** | Operational efficiency, internal systems | No | Workflow automation, internal tools |
+| 📈 **CDO** | Data strategy, analytics, metrics | No | Data pipelines, ML, business intelligence |
+| 🔒 **CISO** | Security posture, compliance, risk | No | Auth, GDPR, SOC2, vulnerability |
+| 👤 **CXO** | Customer satisfaction, journey | No | NPS, churn, support, onboarding |
+| 💬 **CCO** | Team alignment, documentation | No | Developer experience, culture, communication |
 
 **Default lenses** (CEO + CTO + CPO) activate when no strong keyword match is found.
-
-### Planned Lenses
-
-| Lens | Focus |
-|:---:|---|
-| 🏭 **COO** | Operational scaling, supply chain, process optimization |
-| 💰 **CFO** | Financial sustainability, budget, profitability |
 
 ---
 
@@ -138,7 +121,7 @@ Decision Brief        ← 5-section structured output
 The orchestrator doesn't run all lenses. It selects the most relevant ones:
 
 1. **Filter** — only active lenses considered
-2. **Match** — scan problem against each lens's domains & triggers
+2. **Match** — scan problem against each lens's domains and triggers
 3. **Score** — count keyword matches
 4. **Boost** — pair complementary lenses (+0.5)
 5. **Select** — top 2-4 lenses
@@ -152,13 +135,13 @@ You can always override: *"Run CTO + CISO review on this auth system"*
 
 Every executive review produces a structured 5-section brief:
 
-| # | Section | What It Contains |
-|:---:|---|---|
-| 1 | **Individual Positions** | GO / MODIFY / BLOCK verdicts with concerns, endorsements, non-negotiables |
-| 2 | **Conflict Detection** | Verdict alignment table — UNANIMOUS / 2-vs-1 / ALL DISAGREE |
-| 3 | **Conflict Mapping** | Matrix across Scope, Timeline, Resource, Risk, Success Criteria |
-| 4 | **Final Alignment** | Changes to plan, unanimous agreements, deferred decisions, risk register |
-| 5 | **Summary Dashboard** | Executive summary with decision, tradeoffs, risks, mitigations, confidence |
+| Section | What It Contains |
+|---------|------------------|
+| **1. Individual Positions** | GO / MODIFY / BLOCK verdicts with concerns, endorsements, non-negotiables |
+| **2. Conflict Detection** | Verdict alignment table — UNANIMOUS / 2-vs-1 / ALL DISAGREE |
+| **3. Conflict Mapping** | Matrix across Scope, Timeline, Resource, Risk, Success Criteria |
+| **4. Final Alignment** | Changes to plan, unanimous agreements, deferred decisions, risk register |
+| **5. Summary Dashboard** | Executive summary with decision, tradeoffs, risks, mitigations, confidence |
 
 Conflicts are classified into 5 types: **Priority**, **Scope**, **Risk**, **Resource**, and **Fundamental**. Types 1-4 are auto-resolved; Type 5 is escalated to you.
 
@@ -169,7 +152,7 @@ Conflicts are classified into 5 types: **Priority**, **Scope**, **Risk**, **Reso
 Every lens can use any tool — not just think in isolation:
 
 | Tool | Purpose |
-|---|---|
+|------|---------|
 | 🌐 **Web research** | Market data, competitor analysis, industry trends |
 | 📂 **Git operations** | `git log`, `git diff` — understand codebase history |
 | 📄 **File access** | Read project files, configuration, documentation |
@@ -187,11 +170,15 @@ polylens/
 ├── skills/                          # 11 invocable skill files
 │   ├── polylens-executive-review.md # Orchestrator: full pipeline
 │   ├── polylens-pre-fight.md        # Orchestrator: adversarial mode
-│   ├── lens-ceo.md                  lens-cto.md
-│   ├── lens-cpo.md                  lens-yc.md
-│   ├── lens-cio.md                  lens-cdo.md
-│   ├── lens-ciso.md                 lens-cxo.md
-│   └── lens-cco.md
+│   ├── lens-ceo.md                  # Business & Strategy
+│   ├── lens-cto.md                  # Technical & Infrastructure
+│   ├── lens-cpo.md                  # Product & User Experience
+│   ├── lens-yc.md                   # Startup & Fundability
+│   ├── lens-cio.md                  # Information & Operations
+│   ├── lens-cdo.md                  # Data & Analytics
+│   ├── lens-ciso.md                 # Security & Compliance
+│   ├── lens-cxo.md                  # Customer Experience
+│   └── lens-cco.md                  # Communication & Culture
 ├── engines/                         # Shared processing logic
 │   ├── collision.md                 # Conflict detection & classification
 │   └── synthesis.md                 # Resolution strategies & output
@@ -200,9 +187,16 @@ polylens/
 │   ├── lens-capabilities.md         # Shared toolset & frameworks
 │   ├── conflict-types.md            # 5 conflict type definitions
 │   └── output-template.md           # 5-section decision brief format
-└── docs/
-    └── README.md                    # Extended documentation
+└── package.json                     # npm package manifest
 ```
+
+### Three-Layer Design
+
+| Layer | Purpose | Files |
+|-------|---------|-------|
+| **Skills** | Individual lens prompts and orchestrators | `skills/*.md` |
+| **Engines** | Shared collision detection and synthesis | `engines/*.md` |
+| **Prompts** | Lens registry, conflict taxonomy, templates | `prompts/*.md` |
 
 ---
 
@@ -215,15 +209,13 @@ PolyLens is designed for extensibility. Adding a lens requires **two files**:
 
 That's it. No changes to orchestrators or engines. The selection algorithm picks up new lenses automatically.
 
-See [docs/README.md](docs/README.md) for detailed contribution guide and lens template.
-
 ---
 
 ## 🤝 Contributing
 
 Contributions welcome:
 
-- **New lenses** — COO, CFO, and perspectives we haven't covered
+- **New lenses** — Add perspectives we haven't covered
 - **Improved frameworks** — Better analytical frameworks for lenses
 - **Conflict resolution** — New strategies for resolving disagreements
 - **Engine improvements** — Better collision detection or synthesis logic
