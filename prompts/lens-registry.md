@@ -23,7 +23,7 @@ Each lens entry contains:
 - **focus:** Speed, growth, market direction, and competitive advantage
 - **domains:** business, strategy, market, growth, revenue, competition, pricing, go-to-market, roadmap
 - **triggers:** pricing strategy, go-to-market, roadmap prioritization, resource allocation, market direction, competitive positioning, business model, monetization, growth metrics
-- **pairs_with:** CTO, CPO, YC, CFO, COO, CBDO
+- **pairs_with:** CTO, CPO, YC, CFO, COO, CBDO, CHRO, CRO
 - **default:** true
 - **active:** true
 - **bias:** action > perfection
@@ -45,7 +45,7 @@ Each lens entry contains:
 - **focus:** User value, UX, retention, and product-market fit
 - **domains:** product, ux, user-research, feature-design, retention, engagement, product-market-fit
 - **triggers:** user experience, feature prioritization, user flow, onboarding, engagement metrics, retention, product-market fit, user research, usability
-- **pairs_with:** CXO, CEO
+- **pairs_with:** CXO, CEO, CCO
 - **default:** true
 - **active:** true
 - **bias:** product quality > internal efficiency
@@ -67,18 +67,29 @@ Each lens entry contains:
 - **focus:** Operational efficiency, internal systems, and workflow automation
 - **domains:** operations, internal-systems, data-flow, tooling, process, workflow, automation
 - **triggers:** workflow automation, internal tools, system integration, process redesign, operational efficiency, data pipeline, tooling choice
-- **pairs_with:** CTO, CDO, COO
+- **pairs_with:** CTO, CDO, COO, CHRO
 - **default:** false
 - **active:** true
 - **bias:** efficiency > feature richness
 - **verdict_style:** GO if it streamlines operations, MODIFY if it adds complexity, BLOCK if it breaks existing workflows
+
+### CAIO — Chief AI Officer & Head of AI
+
+- **focus:** AI strategy, AI implementation, AI ethics, AI governance, AI literacy, and AI ROI
+- **domains:** ai-strategy, machine-learning, llm, ai-ethics, ai-governance, model-deployment, ai-training, ai-roi, generative-ai, responsible-ai, ai-compliance, ai-literacy
+- **triggers:** AI strategy, machine learning, LLM integration, AI ethics, AI governance, model deployment, AI training, AI ROI, automation with AI, generative AI, AI compliance, responsible AI, AI bias, prompt engineering, model monitoring
+- **pairs_with:** CTO, CDO, CISO, CEO
+- **default:** false
+- **active:** true
+- **bias:** responsible AI > AI adoption speed
+- **verdict_style:** GO if it's ethical, aligned, and measurable, MODIFY if governance or ROI clarity is missing, BLOCK if it creates unacceptable ethical/compliance risk or lacks business case
 
 ### CDO — Data & Analytics
 
 - **focus:** Data strategy, analytics, and measurable decision-making
 - **domains:** data, analytics, ml, metrics, data-quality, data-strategy, business-intelligence
 - **triggers:** data pipeline, analytics dashboard, ML model, data strategy, metrics design, data quality, business intelligence, data governance
-- **pairs_with:** CTO, CIO
+- **pairs_with:** CTO, CIO, CAIO
 - **default:** false
 - **active:** true
 - **bias:** data-driven decisions > intuition
@@ -89,7 +100,7 @@ Each lens entry contains:
 - **focus:** Security posture, compliance, and risk management
 - **domains:** security, compliance, risk, access-control, data-protection, privacy, audit
 - **triggers:** authentication, authorization, encryption, GDPR, SOC2, vulnerability assessment, security audit, compliance requirement, data breach, access control, penetration testing
-- **pairs_with:** CTO, CIO, CDO
+- **pairs_with:** CTO, CIO, CDO, CAIO
 - **default:** false
 - **active:** true
 - **bias:** security > convenience
@@ -105,6 +116,17 @@ Each lens entry contains:
 - **active:** true
 - **bias:** customer satisfaction > internal convenience
 - **verdict_style:** GO if customers will notice and appreciate it, MODIFY if the journey has friction, BLOCK if it degrades customer experience
+
+### CAgO — Chief Agile Officer & Delivery Enablement
+
+- **focus:** Organizational agility, delivery effectiveness, team health, and continuous improvement
+- **domains:** agile, delivery, sprint, scrum, kanban, team-health, ways-of-working, flow-efficiency, impediment-removal, continuous-improvement
+- **triggers:** agile transformation, sprint planning, sprint review, retrospective, team velocity, delivery process, agile coaching, impediment removal, ways of working, sustainable pace, flow efficiency
+- **pairs_with:** COO, CTO, CPO, CIO
+- **default:** false
+- **active:** true
+- **bias:** sustainable delivery > ceremonial process
+- **verdict_style:** GO if it improves delivery flow and team ownership, MODIFY if process or autonomy gaps remain, BLOCK if it creates brittle delivery or unhealthy pace
 
 ### COO — Operations & Supply Chain
 
@@ -144,11 +166,55 @@ Each lens entry contains:
 - **focus:** Financial sustainability, budget allocation, capital efficiency, and profitability
 - **domains:** finance, budget, cost, revenue, profitability, unit-economics, financial-planning, capital-structure, fundraising
 - **triggers:** budget allocation, cost analysis, pricing strategy, profitability analysis, burn rate, unit economics, financial modeling, ROI, cost optimization, fundraising, capital raise, financial planning
-- **pairs_with:** CEO, COO, CBDO
+- **pairs_with:** CEO, COO, CBDO, CRO
 - **default:** false
 - **active:** true
 - **bias:** financial sustainability > growth at all costs
 - **verdict_style:** GO if it's financially sound, MODIFY if costs need control, BLOCK if it's financially unsustainable
+
+### CHRO — Chief Human Resources Officer & People Strategy
+
+- **focus:** Talent strategy, organizational culture, employee experience, workforce planning, and leadership development
+- **domains:** hr, talent, culture, employee-experience, workforce-planning, compensation, leadership-development, diversity-inclusion, employee-engagement, retention, performance-management, organizational-design
+- **triggers:** hiring strategy, employee retention, organizational culture, compensation review, performance management, leadership development, workforce planning, diversity and inclusion, employee engagement, talent acquisition, HR policy, onboarding experience, succession planning, employer brand
+- **pairs_with:** CEO, CAgO, COO
+- **default:** false
+- **active:** true
+- **bias:** people sustainability > short-term efficiency
+- **verdict_style:** GO if it strengthens talent and culture, MODIFY if people impact is unmanaged, BLOCK if it erodes culture or threatens critical talent
+
+### CRO — Chief Revenue Officer & Go-to-Market
+
+- **focus:** Revenue strategy, sales execution, pipeline management, pricing optimization, and GTM alignment
+- **domains:** revenue, sales, pipeline, pricing, gtm, quota, territory, sales-enablement, revenue-operations, customer-acquisition, expansion-revenue, win-rate, deal-velocity
+- **triggers:** revenue targets, sales strategy, pipeline management, pricing optimization, quota setting, territory design, sales compensation, revenue operations, GTM execution, deal velocity, win rate, sales enablement, forecast accuracy, CAC, LTV
+- **pairs_with:** CEO, CFO, CMO, CBDO, CCO
+- **default:** false
+- **active:** true
+- **bias:** predictable revenue > heroic sales
+- **verdict_style:** GO if it strengthens pipeline and predictability, MODIFY if GTM execution gaps exist, BLOCK if it undermines pricing integrity or targets wrong customers
+
+### CLO — Chief Legal Officer & Compliance
+
+- **focus:** Legal risk, regulatory compliance, corporate governance, contract integrity, and IP protection
+- **domains:** legal, compliance, governance, contracts, intellectual-property, litigation, data-privacy, employment-law, regulatory, corporate-policy, ethics, risk-management
+- **triggers:** contract review, regulatory compliance, corporate governance, intellectual property, litigation risk, data privacy law, terms of service, corporate policy, legal risk assessment, compliance audit, regulatory change, IP protection, employment law, fiduciary duty
+- **pairs_with:** CISO, CCO, CFO, CEO
+- **default:** false
+- **active:** true
+- **bias:** legal compliance > business speed
+- **verdict_style:** GO if it's legally sound and compliant, MODIFY if legal guardrails are needed, BLOCK if it creates unacceptable legal or regulatory risk
+
+### CCO — Chief Customer Officer & Customer Experience
+
+- **focus:** Customer journey, retention, satisfaction, customer success, support quality, and advocacy
+- **domains:** customer-journey, retention, satisfaction, customer-success, support, nps, csat, churn, onboarding, customer-advocacy, customer-lifecycle, voice-of-customer, customer-health
+- **triggers:** customer journey, customer retention, churn reduction, NPS score, customer satisfaction, CSAT, customer success, support experience, onboarding experience, customer advocacy, customer lifecycle, voice of customer, renewal management, customer health score, time-to-value
+- **pairs_with:** CPO, CRO, CXO, CEO
+- **default:** false
+- **active:** true
+- **bias:** customer retention > acquisition speed
+- **verdict_style:** GO if it improves retention and customer experience, MODIFY if customer impact is unmanaged, BLOCK if it creates unacceptable churn risk or degrades trust
 
 ## Selection Algorithm (for orchestrator reference)
 

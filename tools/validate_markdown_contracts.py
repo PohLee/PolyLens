@@ -45,7 +45,9 @@ def require(condition: bool, message: str, errors: list[str]) -> None:
 
 
 def parse_registry(text: str) -> tuple[list[str], dict[str, dict[str, str]]]:
-    headings = list(re.finditer(r"^###\s+([A-Z]+)\s+—\s+.+$", text, flags=re.MULTILINE))
+    headings = list(
+        re.finditer(r"^###\s+([A-Z][A-Za-z]*)\s+—\s+.+$", text, flags=re.MULTILINE)
+    )
     order: list[str] = []
     entries: dict[str, dict[str, str]] = {}
 
