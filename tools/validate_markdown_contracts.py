@@ -13,12 +13,18 @@ REGISTRY_PATH = ROOT / "prompts" / "lens-registry.md"
 OUTPUT_TEMPLATE_PATH = ROOT / "prompts" / "output-template.md"
 COLLISION_PATH = ROOT / "engines" / "collision.md"
 SYNTHESIS_PATH = ROOT / "engines" / "synthesis.md"
-EXEC_REVIEW_PATH = ROOT / "skills" / "polylens-executive-review" / "SKILL.md"
-PRE_FIGHT_PATH = ROOT / "skills" / "polylens-pre-fight" / "SKILL.md"
+ROUTER_PATH = ROOT / "skills" / "polylens" / "SKILL.md"
+LENS_REVIEW_PATH = ROOT / "skills" / "polylens-lens-review" / "SKILL.md"
+ORCHESTRATORS_DIR = ROOT / "orchestrators"
+EXEC_REVIEW_PATH = ORCHESTRATORS_DIR / "polylens-executive-review.md"
+PRE_FIGHT_PATH = ORCHESTRATORS_DIR / "polylens-pre-fight.md"
 SKILLS_DIR = ROOT / "skills"
 SHARED_DIR = SKILLS_DIR / "shared"
+LENSES_DIR = ROOT / "lenses"
 BUNDLED_PROMPTS_DIR = SHARED_DIR / "prompts"
 BUNDLED_ENGINES_DIR = SHARED_DIR / "engines"
+BUNDLED_LENSES_DIR = SHARED_DIR / "lenses"
+BUNDLED_ORCHESTRATORS_DIR = SHARED_DIR / "orchestrators"
 
 
 LENS_REQUIRED_FIELDS = [
@@ -139,28 +145,28 @@ def validate_registry(errors: list[str]) -> list[str]:
     return active_lenses
 
 
-def validate_lens_skill(lens_name: str, errors: list[str]) -> None:
-    skill_path = SKILLS_DIR / f"lens-{lens_name.lower()}" / "SKILL.md"
-    require(skill_path.exists(), f"missing lens skill: {skill_path.relative_to(ROOT)}", errors)
-    if not skill_path.exists():
+def validate_lens_brief(lens_name: str, errors: list[str]) -> None:
+    lens_path = LENSES_DIR / f"lens-{lens_name.lower()}.md"
+    require(lens_path.exists(), f"missing lens brief: {lens_path.relative_to(ROOT)}", errors)
+    if not lens_path.exists():
         return
 
-    text = read_text(skill_path)
+    text = read_text(lens_path)
     require(
         f"---BEGIN {lens_name} POSITION---" in text,
-        f"{skill_path.relative_to(ROOT)}: missing BEGIN position marker for {lens_name}",
+        f"{lens_path.relative_to(ROOT)}: missing BEGIN position marker for {lens_name}",
         errors,
     )
     require(
         f"---END {lens_name} POSITION---" in text,
-        f"{skill_path.relative_to(ROOT)}: missing END position marker for {lens_name}",
+        f"{lens_path.relative_to(ROOT)}: missing END position marker for {lens_name}",
         errors,
     )
 
     for required_field in LENS_REQUIRED_FIELDS:
         require(
             required_field in text,
-            f"{skill_path.relative_to(ROOT)}: missing '{required_field}' in lens output contract",
+            f"{lens_path.relative_to(ROOT)}: missing '{required_field}' in lens output contract",
             errors,
         )
 
@@ -169,7 +175,7 @@ def validate_lens_skill(lens_name: str, errors: list[str]) -> None:
     ]:
         require(
             required_text in text,
-            f"{skill_path.relative_to(ROOT)}: missing '{required_text}'",
+            f"{lens_path.relative_to(ROOT)}: missing '{required_text}'",
             errors,
         )
 
@@ -178,10 +184,13 @@ def validate_bundled_shared_docs(errors: list[str]) -> None:
     bundled_paths = [
         BUNDLED_PROMPTS_DIR / "lens-registry.md",
         BUNDLED_PROMPTS_DIR / "lens-capabilities.md",
+        BUNDLED_PROMPTS_DIR / "shared-playbooks.md",
         BUNDLED_PROMPTS_DIR / "conflict-types.md",
         BUNDLED_PROMPTS_DIR / "output-template.md",
         BUNDLED_ENGINES_DIR / "collision.md",
         BUNDLED_ENGINES_DIR / "synthesis.md",
+        BUNDLED_ORCHESTRATORS_DIR / "polylens-executive-review.md",
+        BUNDLED_ORCHESTRATORS_DIR / "polylens-pre-fight.md",
     ]
 
     for bundled_path in bundled_paths:
@@ -190,6 +199,7 @@ def validate_bundled_shared_docs(errors: list[str]) -> None:
     prompt_pairs = [
         (REGISTRY_PATH, BUNDLED_PROMPTS_DIR / "lens-registry.md"),
         (ROOT / "prompts" / "lens-capabilities.md", BUNDLED_PROMPTS_DIR / "lens-capabilities.md"),
+        (ROOT / "prompts" / "shared-playbooks.md", BUNDLED_PROMPTS_DIR / "shared-playbooks.md"),
         (ROOT / "prompts" / "conflict-types.md", BUNDLED_PROMPTS_DIR / "conflict-types.md"),
         (OUTPUT_TEMPLATE_PATH, BUNDLED_PROMPTS_DIR / "output-template.md"),
     ]
@@ -219,17 +229,65 @@ def validate_bundled_shared_docs(errors: list[str]) -> None:
                 errors,
             )
 
+    orchestrator_pairs = [
+        (EXEC_REVIEW_PATH, BUNDLED_ORCHESTRATORS_DIR / "polylens-executive-review.md"),
+        (PRE_FIGHT_PATH, BUNDLED_ORCHESTRATORS_DIR / "polylens-pre-fight.md"),
+    ]
+    for source_path, bundled_path in orchestrator_pairs:
+        if source_path.exists() and bundled_path.exists():
+            require(
+                read_text(source_path) == read_text(bundled_path),
+                (
+                    f"bundled orchestrator mismatch: {bundled_path.relative_to(ROOT)} must match "
+                    f"{source_path.relative_to(ROOT)}"
+                ),
+                errors,
+            )
+
+    for lens_path in sorted(LENSES_DIR.glob("lens-*.md")):
+        bundled_path = BUNDLED_LENSES_DIR / lens_path.name
+        require(
+            bundled_path.exists(),
+            f"missing bundled lens brief: {bundled_path.relative_to(ROOT)}",
+            errors,
+        )
+        if bundled_path.exists():
+            require(
+                read_text(lens_path) == read_text(bundled_path),
+                (
+                    f"bundled lens mismatch: {bundled_path.relative_to(ROOT)} must match "
+                    f"{lens_path.relative_to(ROOT)}"
+                ),
+                errors,
+            )
+
 
 def validate_skill_inventory(active_lenses: list[str], errors: list[str]) -> None:
-    lens_dirs = sorted(
-        path.name for path in SKILLS_DIR.iterdir() if path.is_dir() and path.name.startswith("lens-")
+    public_skill_dirs = sorted(
+        path.name
+        for path in SKILLS_DIR.iterdir()
+        if path.is_dir() and not path.name.startswith(".") and path.name != "shared"
     )
-    expected_dirs = sorted(f"lens-{name.lower()}" for name in active_lenses)
+    expected_dirs = sorted([
+        "polylens",
+        "polylens-lens-review",
+    ])
     require(
-        lens_dirs == expected_dirs,
+        public_skill_dirs == expected_dirs,
         (
-            f"skills inventory mismatch: expected {expected_dirs}, found {lens_dirs}. "
-            "Update prompts/lens-registry.md or skills/lens-*/SKILL.md to restore parity."
+            f"skills inventory mismatch: expected public skills {expected_dirs}, found {public_skill_dirs}. "
+            "Keep only the public router/orchestrator skills at the top level and move lens briefs into shared docs."
+        ),
+        errors,
+    )
+
+    expected_lens_briefs = sorted(f"lens-{name.lower()}.md" for name in active_lenses)
+    actual_lens_briefs = sorted(path.name for path in LENSES_DIR.glob("lens-*.md"))
+    require(
+        actual_lens_briefs == expected_lens_briefs,
+        (
+            f"lens brief inventory mismatch: expected {expected_lens_briefs}, found {actual_lens_briefs}. "
+            "Update prompts/lens-registry.md or lenses/lens-*.md to restore parity."
         ),
         errors,
     )
@@ -291,10 +349,24 @@ def validate_synthesis(errors: list[str]) -> None:
 
 
 def validate_orchestrators(errors: list[str]) -> None:
+    router_text = read_text(ROUTER_PATH)
+    for required_text in [
+        "Standard review mode",
+        "Pre-fight mode",
+        "../shared/orchestrators/polylens-executive-review.md",
+        "../shared/orchestrators/polylens-pre-fight.md",
+        "Default to **standard review mode**",
+    ]:
+        require(
+            required_text in router_text,
+            f"{ROUTER_PATH.relative_to(ROOT)}: missing '{required_text}'",
+            errors,
+        )
+
     exec_text = read_text(EXEC_REVIEW_PATH)
     for required_text in [
         "../shared/prompts/lens-registry.md",
-        "../lens-<name>/SKILL.md",
+        "../shared/lenses/lens-<name>.md",
         "../shared/engines/collision.md",
         "../shared/engines/synthesis.md",
         "../shared/prompts/output-template.md",
@@ -308,6 +380,21 @@ def validate_orchestrators(errors: list[str]) -> None:
         require(
             required_text in exec_text,
             f"{EXEC_REVIEW_PATH.relative_to(ROOT)}: missing '{required_text}'",
+            errors,
+        )
+
+    lens_review_text = read_text(LENS_REVIEW_PATH)
+    for required_text in [
+        "../shared/prompts/lens-registry.md",
+        "../shared/lenses/lens-<name>.md",
+        "../shared/prompts/lens-capabilities.md",
+        "../shared/prompts/shared-playbooks.md",
+        "Select exactly one lens",
+        "Do not run collision or synthesis for a single-lens review",
+    ]:
+        require(
+            required_text in lens_review_text,
+            f"{LENS_REVIEW_PATH.relative_to(ROOT)}: missing '{required_text}'",
             errors,
         )
 
@@ -355,8 +442,12 @@ def main() -> int:
         OUTPUT_TEMPLATE_PATH,
         COLLISION_PATH,
         SYNTHESIS_PATH,
+        ROUTER_PATH,
+        ORCHESTRATORS_DIR,
         EXEC_REVIEW_PATH,
+        LENS_REVIEW_PATH,
         PRE_FIGHT_PATH,
+        LENSES_DIR,
     ]:
         require(required_path.exists(), f"missing required file: {required_path.relative_to(ROOT)}", errors)
 
@@ -369,7 +460,7 @@ def main() -> int:
     active_lenses = validate_registry(errors)
     validate_skill_inventory(active_lenses, errors)
     for lens_name in active_lenses:
-        validate_lens_skill(lens_name, errors)
+        validate_lens_brief(lens_name, errors)
     validate_output_template(errors)
     validate_bundled_shared_docs(errors)
     validate_collision(errors)

@@ -17,9 +17,9 @@ cd polylens
 ln -s "$(pwd)/skills" ~/.config/opencode/skills/polylens
 ```
 
-That's it. Every lens and orchestrator is now available as a skill.
+That's it. PolyLens exposes three public entry skills: executive review, focused lens review, and pre-fight.
 
-The installable `skills/` tree is self-contained. Runtime references stay inside that tree by using sibling-relative paths such as `../shared/prompts/...` and `../shared/engines/...`, so PolyLens can review another repository without extra directory permissions.
+The installable `skills/` tree is self-contained. Runtime references stay inside that tree by using sibling-relative paths such as `../shared/prompts/...`, `../shared/engines/...`, and `../shared/lenses/...`, so PolyLens can review another repository without extra directory permissions.
 
 ---
 
@@ -35,26 +35,13 @@ Invoke the `polylens-executive-review` skill. The orchestrator automatically sel
 Run executive review on our plan to migrate from PostgreSQL to MongoDB
 ```
 
-### Mode 2: Individual Lens Review
+### Mode 2: Focused Lens Review
 
-Invoke any lens skill directly for a focused, single-perspective analysis.
-
-**Available lenses:**
-
-| Skill | Focus | Triggers |
-|---|---|---|
-| `lens-ceo` | Business & Strategy | pricing strategy, go-to-market, roadmap, growth metrics |
-| `lens-cto` | Technical & Infrastructure | tech stack, API design, scalability, technical debt |
-| `lens-cpo` | Product & User Experience | user experience, feature prioritization, retention, usability |
-| `lens-yc` | Startup & Fundability | pitch deck, fundraising, MVP scope, unit economics |
-| `lens-cio` | Information & Operations | workflow automation, internal tools, process redesign |
-| `lens-cdo` | Data & Analytics | data pipeline, analytics dashboard, ML model, metrics |
-| `lens-ciso` | Security & Compliance | authentication, GDPR, SOC2, vulnerability assessment |
-| `lens-cxo` | Customer Experience | customer journey, NPS, support flow, churn reduction |
-| `lens-cco` | Communication & Culture | team alignment, documentation, developer experience |
+Invoke the `polylens-lens-review` skill for one routed perspective. It automatically selects the best lens unless you name one.
 
 ```
-Run CTO review on our new API design
+Run lens review on our new API design
+Run lens review on our authentication flow and use the CISO lens
 ```
 
 ### Mode 3: Pre-Fight (Adversarial Critique)
@@ -91,33 +78,17 @@ Filename convention:
 
 ## Available Skills
 
-### Orchestrators (2)
+### Public Skills (3)
 
 | Skill | Purpose |
 |---|---|
 | `polylens-executive-review` | Full multi-lens review with automatic lens selection, collision detection, and synthesis |
+| `polylens-lens-review` | Single-entry focused review that routes to the most relevant lens |
 | `polylens-pre-fight` | Adversarial critique mode — lenses attack and defend positions |
 
-### Lenses (9 Active)
+### Routed Lens Library
 
-| Skill | Focus | Default | Key Triggers |
-|---|---|---|---|
-| `lens-ceo` | Speed, growth, market direction | Yes | pricing strategy, go-to-market, roadmap |
-| `lens-cto` | Scalability, risk, system integrity | Yes | tech stack, API design, scalability |
-| `lens-cpo` | User value, UX, retention | Yes | user experience, feature prioritization |
-| `lens-yc` | Clarity, fundability, simplicity | No | pitch deck, fundraising, MVP scope |
-| `lens-cio` | Operational efficiency, internal systems | No | workflow automation, internal tools |
-| `lens-cdo` | Data strategy, analytics, metrics | No | data pipeline, analytics, ML model |
-| `lens-ciso` | Security posture, compliance, risk | No | authentication, GDPR, security audit |
-| `lens-cxo` | Customer satisfaction, journey | No | customer journey, NPS, churn reduction |
-| `lens-cco` | Team alignment, documentation | No | team alignment, developer experience |
-
-### Planned (Not Yet Active)
-
-| Lens | Focus |
-|---|---|
-| COO | Operational scaling, supply chain, process optimization |
-| CFO | Financial sustainability, budget, profitability |
+PolyLens still includes the full lens set, but they now live behind the router instead of appearing as separate public skills.
 
 ### Shared Playbooks
 
@@ -140,20 +111,15 @@ These are reusable methods available to every lens and orchestrator. They are no
 polylens/
 ├── skills/                          # Skill definitions (invocable by OpenCode)
 │   ├── polylens-executive-review.md # Orchestrator: full review pipeline
+│   ├── polylens-lens-review.md      # Single-entry focused lens router
 │   ├── polylens-pre-fight.md        # Orchestrator: adversarial critique
 │   ├── shared/                      # Bundled runtime docs used by installed skills
 │   │   ├── prompts/
 │   │   ├── engines/
+│   │   ├── lenses/
 │   │   └── playbooks/
-│   ├── lens-ceo.md                  # Business & Strategy
-│   ├── lens-cto.md                  # Technical & Infrastructure
-│   ├── lens-cpo.md                  # Product & User Experience
-│   ├── lens-yc.md                   # Startup & Fundability
-│   ├── lens-cio.md                  # Information & Operations
-│   ├── lens-cdo.md                  # Data & Analytics
-│   ├── lens-ciso.md                 # Security & Compliance
-│   ├── lens-cxo.md                  # Customer Experience
-│   └── lens-cco.md                  # Communication & Culture
+├── lenses/                          # Source lens briefs
+│   └── lens-*.md
 ├── engines/                         # Shared processing logic
 │   ├── collision.md                 # Conflict detection & classification
 │   └── synthesis.md                 # Resolution strategies & output assembly
@@ -168,15 +134,16 @@ polylens/
     └── README.md                    # This file
 ```
 
-The root `prompts/` and `engines/` directories remain the source docs for development. Their runtime copies live under `skills/shared/` so installed agents only need access to the symlinked `skills/` tree.
+The root `prompts/`, `engines/`, and `lenses/` directories remain the source docs for development. Their runtime copies live under `skills/shared/` so installed agents only need access to the symlinked `skills/` tree.
 
-### Three-Layer Design
+### Four-Layer Design
 
 | Layer | Purpose | Files |
 |---|---|---|
-| **Skills** | Individual lens prompts + orchestrators | `skills/*.md` |
+| **Skills** | Public entrypoints only | `skills/polylens-*/SKILL.md` |
+| **Lens Library** | Internal perspective briefs selected by routing | `lenses/lens-*.md`, `skills/shared/lenses/lens-*.md` |
 | **Engines** | Shared collision detection and synthesis | `engines/*.md` |
-| **Prompts** | Lens registry, conflict taxonomy, templates | `prompts/*.md` |
+| **Prompts** | Lens registry, conflict taxonomy, playbooks, templates | `prompts/*.md`, `prompts/playbooks/*.md` |
 
 ---
 
@@ -255,11 +222,11 @@ Every lens has access to the same shared toolset, reusable playbooks, and analyt
 
 ## Adding New Lenses
 
-PolyLens is designed for extensibility. Adding a new lens requires only two changes:
+PolyLens is designed for extensibility. Adding a new lens requires three changes:
 
-### Step 1: Create the Lens Skill
+### Step 1: Create the Source Lens Brief
 
-Create `skills/lens-<name>.md` following the existing lens template:
+Create `lenses/lens-<name>.md` following the existing lens template:
 
 ```markdown
 ---
@@ -299,7 +266,11 @@ description: Use when... Triggers: ...
 - **BLOCK:** ...
 ```
 
-### Step 2: Register the Lens
+### Step 2: Bundle the Runtime Copy
+
+Copy the same file to `skills/shared/lenses/lens-<name>.md`.
+
+### Step 3: Register the Lens
 
 Add an entry to `prompts/lens-registry.md`:
 
@@ -316,7 +287,7 @@ Add an entry to `prompts/lens-registry.md`:
 - **verdict_style:** GO if ..., MODIFY if ..., BLOCK if ...
 ```
 
-That's it. No changes to orchestrators or engines are needed. The selection algorithm picks up new lenses automatically.
+That's it. No changes to orchestrators or engines are needed. The selection algorithm picks up new lenses automatically, and the validator checks that source and bundled copies stay in sync.
 
 ---
 

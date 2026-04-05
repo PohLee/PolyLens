@@ -39,7 +39,7 @@ cd polylens
 
 > **Tip:** After installation, verify skills are detected by asking your agent: *"What skills do you have available?"*
 
-The installable `skills/` tree is self-contained. Runtime references stay inside that tree by using sibling-relative paths such as `../shared/prompts/...` and `../shared/engines/...`, so PolyLens can review another repository without extra directory permissions.
+The installable `skills/` tree is self-contained. Runtime references stay inside that tree by using sibling-relative paths such as `../shared/prompts/...`, `../shared/engines/...`, and `../shared/lenses/...`, so PolyLens can review another repository without extra directory permissions.
 
 ---
 
@@ -55,13 +55,13 @@ Run executive review on our plan to migrate from PostgreSQL to MongoDB
 
 **Triggers:** *"run executive review"*, *"polylens review"*, *"multi-lens review"*, *"analyze from multiple perspectives"*
 
-### Mode 2: Individual Lens
+### Mode 2: Focused Lens Review
 
-Single-perspective analysis for focused reviews.
+Single-perspective analysis through one routed entry skill. PolyLens picks the best lens automatically unless you name one explicitly.
 
 ```
-Run CTO review on our new API design
-Run CISO review on our authentication flow
+Run lens review on our new API design
+Run lens review on our authentication flow and use the CISO lens
 ```
 
 ### Mode 3: Pre-Fight
@@ -99,6 +99,8 @@ Filename convention:
 ---
 
 ## 👥 The Lenses
+
+These are internal perspectives in the routing system, not separate top-level skills. The public entrypoints route to them when needed.
 
 | Lens | Full Name | Focus | Default | When It Fires |
 |------|-----------|-------|:-------:|---------------|
@@ -248,14 +250,16 @@ Shared playbooks are also available when the analysis needs more structure: **Da
 ```
 polylens/
 ├── skills/
-│   ├── polylens-executive-review.md  # Orchestrator: full pipeline
-│   ├── polylens-pre-fight.md         # Orchestrator: adversarial mode
+│   ├── polylens-executive-review/    # Orchestrator: full pipeline
+│   ├── polylens-lens-review/         # Single-entry focused lens router
+│   ├── polylens-pre-fight/           # Orchestrator: adversarial mode
 │   ├── shared/                       # Bundled runtime docs used by installed skills
 │   │   ├── prompts/
 │   │   ├── engines/
+│   │   ├── lenses/
 │   │   └── playbooks/
-│   ├── lens-***/                     # Individual lenses skill
-│   │   └── SKILL.md
+├── lenses/                           # Source lens briefs
+│   └── lens-*.md
 ├── engines/                          # Shared processing logic
 │   ├── collision.md                  # Conflict detection & classification
 │   └── synthesis.md                  # Resolution strategies & output
@@ -278,25 +282,23 @@ polylens/
 └── README.md                         # Project overview
 ```
 
-The root `prompts/` and `engines/` directories remain the source docs for development. Their runtime copies live under `skills/shared/` so installed agents only need access to the symlinked `skills/` tree.
+The root `prompts/`, `engines/`, and `lenses/` directories remain the source docs for development. Their runtime copies live under `skills/shared/` so installed agents only need access to the symlinked `skills/` tree.
 
-### Lens Directory Structure
+### Lens Library Structure
 
-Each lens lives in its own directory (`lens-<name>/SKILL.md`), enabling future extensions:
+Each lens now lives as a shared brief file instead of a public skill entry:
 
-| Subdirectory | Purpose |
-|--------------|---------|
-| `SKILL.md` | The lens definition — philosophy, directives, metrics, strategy, review process |
-| `scripts/` | Executable helpers (e.g., `calculate-dora-metrics.sh`, `check-vulnerabilities.py`) |
-| `reference/` | Domain frameworks and standards (e.g., `owasp-top-10.md`, `dora-metrics.md`) |
-| `checklists/` | Standalone audit checklists (e.g., `security-review-checklist.md`) |
-| `templates/` | Output artifacts (e.g., `incident-report-template.md`, `post-mortem-template.md`) |
+| File | Purpose |
+|------|---------|
+| `lenses/lens-<name>.md` | Source lens definition — philosophy, directives, metrics, strategy, review process |
+| `skills/shared/lenses/lens-<name>.md` | Bundled runtime copy used by installed skills |
 
 ### Three-Layer Design
 
 | Layer | Purpose | Files |
 |-------|---------|-------|
-| **Skills** | Individual lens prompts and orchestrators | `skills/*/SKILL.md`, `skills/polylens-*.md` |
+| **Skills** | Public entrypoints only | `skills/polylens-*/SKILL.md` |
+| **Lens Library** | Internal perspective briefs selected by routing | `lenses/lens-*.md`, `skills/shared/lenses/lens-*.md` |
 | **Engines** | Shared collision detection and synthesis | `engines/*.md` |
 | **Prompts** | Lens registry, conflict taxonomy, shared playbooks, and templates | `prompts/*.md`, `prompts/playbooks/*.md` |
 
@@ -305,7 +307,7 @@ Each lens lives in its own directory (`lens-<name>/SKILL.md`), enabling future e
 | Aspect | Lenses | Shared Playbooks |
 |--------|--------|---------------|
 | **Purpose** | Multi-perspective decision review | Reusable analytical methods inside a review |
-| **Invocation** | Via executive review or individually | Applied by lenses or orchestrators when needed |
+| **Invocation** | Routed through `polylens-executive-review` or `polylens-lens-review` | Applied by lenses or orchestrators when needed |
 | **Output** | Position block (GO/MODIFY/BLOCK) | Supporting analysis folded into a lens position or synthesis |
 | **Examples** | CEO, CTO, CPO, CFO, CRO | Data Analysis, Financial Statement Analysis, Root Cause Analysis |
 
@@ -313,16 +315,13 @@ Each lens lives in its own directory (`lens-<name>/SKILL.md`), enabling future e
 
 ## ➕ Adding New Lenses
 
-PolyLens is designed for extensibility. Adding a lens requires **two files**:
+PolyLens is designed for extensibility. Adding a lens requires **three updates**:
 
-1. **Create the lens directory:** `skills/lens-<name>/SKILL.md` (follow existing lens template)
-2. **Register it:** Add entry to `prompts/lens-registry.md` with domains, triggers, pairs_with
+1. **Create the source lens brief:** `lenses/lens-<name>.md`
+2. **Bundle the runtime copy:** `skills/shared/lenses/lens-<name>.md`
+3. **Register it:** Add entry to `prompts/lens-registry.md` with domains, triggers, pairs_with
 
-Optional subdirectories for heavier lenses:
-- `scripts/` — Executable helpers that pull live data
-- `reference/` — Domain frameworks and standards
-- `checklists/` — Standalone audit checklists
-- `templates/` — Output artifacts and report formats
+The validator checks that the source and bundled copies stay identical.
 
 That's it. No changes to orchestrators or engines. The selection algorithm picks up new lenses automatically.
 
@@ -347,7 +346,7 @@ Contributions welcome:
 
 ### Contract Validation
 
-PolyLens includes a repo-native validator that checks the working markdown contract across the lens registry, active lens skills, orchestrators, engines, and output templates.
+PolyLens includes a repo-native validator that checks the working markdown contract across the lens registry, shared lens library, orchestrators, engines, bundled runtime copies, and output templates.
 
 ```bash
 python3 tools/validate_markdown_contracts.py

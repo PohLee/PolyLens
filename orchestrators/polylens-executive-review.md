@@ -43,7 +43,7 @@ Announce which lenses were selected and why.
 
 ### Step 2: Run Each Lens
 
-For each selected lens, read the corresponding sibling skill at `../lens-<name>/SKILL.md` and follow its review process.
+For each selected lens, read the corresponding shared lens brief at `../shared/lenses/lens-<name>.md` and follow its review process.
 
 Run lenses sequentially to preserve context. For each lens:
 1. Apply the lens's philosophy, directives, and cognitive patterns
@@ -101,7 +101,7 @@ If the user asks to save, export, write, or generate the brief as a markdown fil
 ## Important Rules
 
 - Always read `../shared/prompts/lens-registry.md` before selecting lenses
-- Always read each lens's sibling skill file before running it
+- Always read each selected lens brief under `../shared/lenses/` before running it
 - When a deeper reusable method is needed, read the relevant file under `../shared/playbooks/`
 - Always read `../shared/engines/collision.md` before detecting conflicts
 - Always read `../shared/engines/synthesis.md` before synthesizing
