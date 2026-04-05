@@ -26,7 +26,7 @@ The easiest install path is to hand your agent a single prompt and let it follow
 
 ```text
 Fetch and follow installation instructions from https://raw.githubusercontent.com/PohLee/PolyLens/main/INSTALL.md.
-Detect my platform and target agent, install PolyLens from https://github.com/PohLee/PolyLens, preserve the sibling skill layout `polylens/`, `polylens-lens-review/`, and `shared/`, and do not symlink the whole repo root. Verify the skills are discoverable when finished.
+Detect my platform and target agent, install PolyLens from https://github.com/PohLee/PolyLens, use the dedicated OpenCode installer when the target is OpenCode, use the matching Claude Code, Codex, or Copilot installer when available, otherwise preserve the sibling skill layout `polylens/`, `polylens-lens-review/`, and `shared/`, and do not symlink the whole repo root. Verify the skills are discoverable when finished.
 ```
 
 ### What The Agent Will Do
@@ -35,7 +35,11 @@ The install instructions tell the agent to:
 
 - use this repository as the source
 - detect the target agent and skills location
-- expose `skills/polylens`, `skills/polylens-lens-review`, and `skills/shared` as sibling directories in that skills location
+- use `bash tools/install_opencode.sh` for OpenCode
+- use `bash tools/install_claude_code.sh` for Claude Code when doing a personal install
+- use `bash tools/install_codex.sh` for Codex when doing a personal install
+- use `bash tools/install_copilot_workspace.sh /path/to/workspace` for GitHub Copilot workspace installs
+- otherwise expose `skills/polylens`, `skills/polylens-lens-review`, and `skills/shared` as sibling directories in the target skills location
 - verify the install
 
 ### Manual Reference
@@ -51,7 +55,7 @@ cd polylens
 
 ### Recommended Layout
 
-The target skills location should contain these three sibling directories:
+For most agents, the target skills location should contain these three sibling directories:
 
 - `polylens/`
 - `polylens-lens-review/`
@@ -59,9 +63,31 @@ The target skills location should contain these three sibling directories:
 
 Do **not** symlink the whole project root. The installable runtime bundle is the repo's `skills/` tree, and the public skills rely on `shared/` being a sibling directory via paths such as `../shared/...`.
 
+OpenCode is the exception. Its runtime path handling can break sibling traversal for markdown dependencies, so use the dedicated installer instead of direct symlinks:
+
+```bash
+bash tools/install_opencode.sh
+```
+
+That command builds `dist/opencode-polylens/` and installs self-contained `polylens/` and `polylens-lens-review/` directories with nested `shared/` assets under `~/.config/opencode/skills/` by default.
+
+For other common agents, PolyLens now provides direct installer scripts as well:
+
+```bash
+bash tools/install_claude_code.sh
+bash tools/install_codex.sh
+bash tools/install_copilot_workspace.sh /path/to/workspace
+```
+
+Those scripts build `dist/standard-polylens/` and install the standard sibling bundle expected by Claude Code, Codex, RooCode-style setups, and Copilot workspace skills.
+
 ### Personal Install Via Symlink
 
 Point your agent's personal skills directory at the three directories inside this repo's `skills/` folder.
+
+Do not use this symlink flow for OpenCode.
+
+If you want a copied bundle rather than symlinks for Claude Code or Codex, use `bash tools/install_claude_code.sh` or `bash tools/install_codex.sh`.
 
 macOS / Linux example:
 
@@ -83,10 +109,13 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\shared" -Targ
 
 If your agent uses a different personal skills directory, replace `~/.claude/skills` with that agent's equivalent skills path. The important part is that the final directory contains the three sibling directories shown above.
 
+For OpenCode, run `bash tools/install_opencode.sh` instead of creating direct symlinks to `skills/`.
+
 ### VS Code / Copilot
 
 GitHub Copilot in VS Code discovers project skills from `.github/skills/`, `.claude/skills/`, or `.agents/skills/` by default. For this repo, use one of these approaches:
 
+- Run `bash tools/install_copilot_workspace.sh /path/to/workspace` to copy the bundle into `.github/skills/`
 - Copy or symlink `skills/polylens`, `skills/polylens-lens-review`, and `skills/shared` into `.github/skills/` or `.claude/skills/`
 - Or add `./skills` to the `chat.skillsLocations` setting so VS Code treats this repo's `skills/` folder as a skill location
 
