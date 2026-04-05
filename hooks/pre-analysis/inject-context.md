@@ -2,7 +2,7 @@
 hook: pre-analysis
 name: inject-context
 order: 1
-enabled: true
+enabled: false
 type: markdown
 ---
 
