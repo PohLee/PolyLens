@@ -47,7 +47,7 @@ For each selected lens, read the corresponding sibling skill at `../lens-<name>/
 
 Run lenses sequentially to preserve context. For each lens:
 1. Apply the lens's philosophy, directives, and cognitive patterns
-2. Optionally use tools from `../shared/prompts/lens-capabilities.md` if it would strengthen the analysis
+2. Optionally use tools from `../shared/prompts/lens-capabilities.md` and reusable methods from `../shared/prompts/shared-playbooks.md` if they would strengthen the analysis
 3. Produce the lens position in the required format (between `---BEGIN <LENS> POSITION---` and `---END <LENS> POSITION---` delimiters)
 4. Include the structured decision-framing block so Scope, Timeline, Resource, Risk, Success Criteria, and Assumptions / Unknowns are explicit
 5. Provide concise reasoning paragraphs
@@ -102,6 +102,7 @@ If the user asks to save, export, write, or generate the brief as a markdown fil
 
 - Always read `../shared/prompts/lens-registry.md` before selecting lenses
 - Always read each lens's sibling skill file before running it
+- When a deeper reusable method is needed, read the relevant file under `../shared/playbooks/`
 - Always read `../shared/engines/collision.md` before detecting conflicts
 - Always read `../shared/engines/synthesis.md` before synthesizing
 - Always read `../shared/prompts/output-template.md` before formatting output

@@ -125,6 +125,31 @@ Filename convention:
 
 ---
 
+## 🔧 Shared Playbooks
+
+Beyond lenses, PolyLens includes reusable playbooks that any lens or orchestrator can apply when the problem needs deeper structure:
+
+| Playbook | Purpose | When to Apply |
+|-------|---------|-------------|
+| 📊 **Data Analysis** | Explore datasets, compute statistics, and quantify trends | When a decision depends on actual dataset evidence |
+| 💹 **Financial Statement Analysis** | Analyze profitability, liquidity, solvency, efficiency, and cash flow | When a decision depends on financial health or capacity |
+| 🔍 **Root Cause Analysis** | Investigate incidents and recurring failures using causal chains | When a problem needs systemic explanation, not symptom treatment |
+| ⚠️ **Risk Assessment** | Identify, score, prioritize, and mitigate cross-domain risks | When tradeoffs need explicit exposure mapping |
+| 🚨 **Crisis Management** | Structure command, containment, continuity, and recovery | When an active crisis needs disciplined response |
+| 📢 **PR Crisis Recovery** | Assess reputation damage and design a trust-rebuilding response | When public narrative and stakeholder trust are at risk |
+
+These live under `prompts/playbooks/` in source form and under `skills/shared/playbooks/` in the installable runtime bundle.
+
+### Usage Examples
+
+```
+Run executive review on the outage and apply the root-cause-analysis playbook
+Run CFO + CEO review on the acquisition and use the financial-statement-analysis playbook
+Run pre-fight review on the launch plan and include a risk assessment
+```
+
+---
+
 ## 🧠 How It Works
 
 ```
@@ -214,6 +239,8 @@ Every lens can use any tool — not just think in isolation:
 
 Plus analytical frameworks: **SWOT**, **Porter's Five Forces**, **Jobs-to-be-Done**, **RICE**, **Kano Model**, **Cost of Delay**, **Technical Debt Quadrant**, **DORA Metrics**.
 
+Shared playbooks are also available when the analysis needs more structure: **Data Analysis**, **Financial Statement Analysis**, **Root Cause Analysis**, **Risk Assessment**, **Crisis Management**, and **PR Crisis Recovery**.
+
 ---
 
 ## 🏗️ Architecture
@@ -225,7 +252,8 @@ polylens/
 │   ├── polylens-pre-fight.md         # Orchestrator: adversarial mode
 │   ├── shared/                       # Bundled runtime docs used by installed skills
 │   │   ├── prompts/
-│   │   └── engines/
+│   │   ├── engines/
+│   │   └── playbooks/
 │   ├── lens-***/                     # Individual lenses skill
 │   │   └── SKILL.md
 ├── engines/                          # Shared processing logic
@@ -234,6 +262,8 @@ polylens/
 ├── prompts/                          # Centralized data & templates
 │   ├── lens-registry.md              # Lens metadata (domains, triggers, pairs)
 │   ├── lens-capabilities.md          # Shared toolset & frameworks
+│   ├── shared-playbooks.md           # Reusable analysis methods index
+│   ├── playbooks/                    # Detailed shared playbooks
 │   ├── conflict-types.md             # 5 conflict type definitions
 │   └── output-template.md            # 5-section decision brief format
 ├── docs/
@@ -268,7 +298,16 @@ Each lens lives in its own directory (`lens-<name>/SKILL.md`), enabling future e
 |-------|---------|-------|
 | **Skills** | Individual lens prompts and orchestrators | `skills/*/SKILL.md`, `skills/polylens-*.md` |
 | **Engines** | Shared collision detection and synthesis | `engines/*.md` |
-| **Prompts** | Lens registry, conflict taxonomy, templates | `prompts/*.md` |
+| **Prompts** | Lens registry, conflict taxonomy, shared playbooks, and templates | `prompts/*.md`, `prompts/playbooks/*.md` |
+
+### Shared Playbooks vs Lenses
+
+| Aspect | Lenses | Shared Playbooks |
+|--------|--------|---------------|
+| **Purpose** | Multi-perspective decision review | Reusable analytical methods inside a review |
+| **Invocation** | Via executive review or individually | Applied by lenses or orchestrators when needed |
+| **Output** | Position block (GO/MODIFY/BLOCK) | Supporting analysis folded into a lens position or synthesis |
+| **Examples** | CEO, CTO, CPO, CFO, CRO | Data Analysis, Financial Statement Analysis, Root Cause Analysis |
 
 ---
 

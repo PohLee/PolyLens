@@ -119,6 +119,19 @@ Filename convention:
 | COO | Operational scaling, supply chain, process optimization |
 | CFO | Financial sustainability, budget, profitability |
 
+### Shared Playbooks
+
+These are reusable methods available to every lens and orchestrator. They are not separate perspective skills.
+
+| Playbook | Purpose |
+|---|---|
+| `data-analysis` | Dataset exploration, statistical summaries, trend analysis, and data-quality checks |
+| `financial-statement-analysis` | Ratio analysis, cash flow assessment, and financial health evaluation |
+| `root-cause-analysis` | 5 Whys, fishbone thinking, and causal-chain investigation |
+| `risk-assessment` | Risk identification, scoring, prioritization, and mitigation planning |
+| `crisis-management` | Command structure, containment, continuity, and crisis response planning |
+| `pr-crisis-recovery` | Reputation damage assessment, response posture, and trust rebuilding |
+
 ---
 
 ## Architecture
@@ -130,7 +143,8 @@ polylens/
 │   ├── polylens-pre-fight.md        # Orchestrator: adversarial critique
 │   ├── shared/                      # Bundled runtime docs used by installed skills
 │   │   ├── prompts/
-│   │   └── engines/
+│   │   ├── engines/
+│   │   └── playbooks/
 │   ├── lens-ceo.md                  # Business & Strategy
 │   ├── lens-cto.md                  # Technical & Infrastructure
 │   ├── lens-cpo.md                  # Product & User Experience
@@ -147,6 +161,8 @@ polylens/
 │   ├── lens-registry.md             # Lens metadata (domains, triggers, pairs)
 │   ├── conflict-types.md            # 5 conflict type definitions
 │   ├── lens-capabilities.md         # Shared toolset & frameworks
+│   ├── shared-playbooks.md          # Reusable analysis methods index
+│   ├── playbooks/                   # Detailed shared playbooks
 │   └── output-template.md           # 5-section decision brief format
 └── docs/
     └── README.md                    # This file
@@ -203,7 +219,7 @@ User-specified lenses always override automatic selection.
 
 ## Lens Capabilities
 
-Every lens has access to the same shared toolset and analytical frameworks:
+Every lens has access to the same shared toolset, reusable playbooks, and analytical frameworks:
 
 ### Available Tools
 
@@ -212,6 +228,15 @@ Every lens has access to the same shared toolset and analytical frameworks:
 - **File system access** — Read project files, configuration, documentation
 - **Code analysis** — Read source code, trace dependencies, understand architecture
 - **Shell commands** — Run tests, builds, linting, metrics
+
+### Shared Playbooks
+
+- **Data Analysis** — Quantify trends and validate claims against real datasets
+- **Financial Statement Analysis** — Assess financial health before major commitments
+- **Root Cause Analysis** — Explain failures systemically instead of stopping at symptoms
+- **Risk Assessment** — Score exposure explicitly and define mitigations
+- **Crisis Management** — Structure command and containment during active incidents
+- **PR Crisis Recovery** — Repair trust and narrative after public damage
 
 ### Analytical Frameworks
 

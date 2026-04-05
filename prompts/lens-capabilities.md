@@ -15,7 +15,20 @@ All lenses have access to:
 - **Shell commands** — Run project-specific commands (tests, builds, linting, metrics)
 - **Strategic frameworks** — SWOT analysis, Porter's Five Forces, Jobs-to-be-Done, RICE prioritization, Kano model
 
-## 2. When to Use Tools
+## 2. Shared Playbooks
+
+All lenses may also apply these reusable methods when they materially improve the analysis:
+
+- **Data analysis** — Explore datasets, validate quality, quantify trends, and summarize evidence
+- **Financial statement analysis** — Assess profitability, liquidity, solvency, efficiency, and cash generation
+- **Root cause analysis** — Trace incidents and recurring problems to their underlying systemic causes
+- **Risk assessment** — Identify, score, prioritize, and mitigate meaningful risks before commitment
+- **Crisis management** — Structure command, containment, continuity, and recovery during active crises
+- **PR crisis recovery** — Assess reputational damage, choose response posture, and rebuild trust
+
+Detailed playbooks live under `prompts/playbooks/` and are indexed in `prompts/shared-playbooks.md`.
+
+## 3. When to Use Tools
 
 | Situation | What to Do |
 |---|---|
@@ -25,7 +38,7 @@ All lenses have access to:
 | **When benchmarking** | Compare against industry standards or competitor approaches |
 | **When data is missing** | Don't guess — research, measure, or read the code |
 
-## 3. Analytical Frameworks Reference
+## 4. Analytical Frameworks Reference
 
 Each lens can apply these frameworks when relevant:
 
@@ -40,7 +53,7 @@ Each lens can apply these frameworks when relevant:
 | Technical Debt Quadrant | Architecture decisions | Deliberate/Inadvertent × Reckless/Prudent classification |
 | DORA Metrics | Engineering velocity assessment | Deployment frequency, lead time, MTTR, change failure rate |
 
-## 4. Tool Usage Pattern
+## 5. Tool Usage Pattern
 
 When a lens needs to use a tool, it should:
 
