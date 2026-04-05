@@ -227,6 +227,62 @@ Run polylens pre-fight review on the launch plan and include a risk assessment
 
 ---
 
+## 🔌 Harness & Hooks
+
+PolyLens includes a harness system for extended control over the analysis pipeline.
+
+### Hooks
+
+Inject custom logic at any stage of the PolyLens pipeline:
+
+| Stage | When it fires | Purpose |
+|-------|---------------|---------|
+| Pre-analysis | Before analysis | Inject context, load constraints |
+| Lens-select | During selection | Force lenses, override scoring |
+| Review | During lens reviews | Add frameworks, custom logic |
+| Collision | During conflict detection | Adjust conflict weights |
+| Synthesis | During brief synthesis | Override output format |
+| Post-analysis | After analysis | Summarize, notify external systems |
+
+**Quick start:**
+```bash
+# List available hooks
+python3 tools/harness.py hooks list
+
+# Enable/disable a hook
+python3 tools/harness.py hooks enable pre-analysis/inject-context
+python3 tools/harness.py hooks disable pre-analysis/inject-context
+
+# Run with validation
+python3 tools/harness.py validate docs/polylens/reviews/260405_migration_r1.md
+```
+
+Hooks can also be defined inline in your prompt — no files needed.
+
+### Harness Orchestration
+
+Run multiple PolyLens analyses in sequence, parallel, or conditionally:
+
+```bash
+# Run with harness config
+python3 tools/harness.py run "Your problem" --orchestration harness/orchestration.md
+
+# Run with specific depth
+python3 tools/harness.py run "Your problem" --depth deep
+```
+
+### Reasoning Control
+
+Control analysis depth, constraints, and output format via `harness/reasoning.md` or inline in your prompt.
+
+### Validation
+
+Automated checks for output format, analysis quality, and cross-lens consistency via `harness/validation.md`.
+
+> **Note:** Harness features require Python 3. The core PolyLens review works without it.
+
+---
+
 ## 🧠 How It Works
 
 ```
