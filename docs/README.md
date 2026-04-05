@@ -17,22 +17,22 @@ cd polylens
 ln -s "$(pwd)/skills" ~/.config/opencode/skills/polylens
 ```
 
-That's it. PolyLens exposes three public entry skills: executive review, focused lens review, and pre-fight.
+That's it. PolyLens exposes two public entry skills: `polylens` for multi-lens work and `polylens-lens-review` for focused single-lens work.
 
-The installable `skills/` tree is self-contained. Runtime references stay inside that tree by using sibling-relative paths such as `../shared/prompts/...`, `../shared/engines/...`, and `../shared/lenses/...`, so PolyLens can review another repository without extra directory permissions.
+The installable `skills/` tree is self-contained. Runtime references stay inside that tree by using sibling-relative paths such as `../shared/prompts/...`, `../shared/engines/...`, `../shared/lenses/...`, and `../shared/orchestrators/...`, so PolyLens can review another repository without extra directory permissions.
 
 ---
 
 ## Usage
 
-### Mode 1: Executive Review (Full Multi-Lens)
+### Mode 1: Standard PolyLens Review (Full Multi-Lens)
 
-Invoke the `polylens-executive-review` skill. The orchestrator automatically selects 2-4 relevant lenses based on your problem context, runs collision detection, and produces a structured decision brief.
+Invoke the `polylens` skill. It routes to the standard executive-review orchestrator by default, selects 2-4 relevant lenses based on your problem context, runs collision detection, and produces a structured decision brief.
 
 **Triggers:** "run executive review", "polylens review", "multi-lens review", "analyze from multiple perspectives"
 
 ```
-Run executive review on our plan to migrate from PostgreSQL to MongoDB
+Run polylens review on our plan to migrate from PostgreSQL to MongoDB
 ```
 
 ### Mode 2: Focused Lens Review
@@ -44,15 +44,15 @@ Run lens review on our new API design
 Run lens review on our authentication flow and use the CISO lens
 ```
 
-### Mode 3: Pre-Fight (Adversarial Critique)
+### Mode 3: PolyLens Pre-Fight (Adversarial Critique)
 
-Invoke the `polylens-pre-fight` skill for structured conflict between lenses. Lenses critique each other's positions, defend their own, and then either escalate the strongest disagreements or finish automatically with deterministic arbitration.
+Invoke the `polylens` skill with adversarial or pre-fight wording. The router sends the request to the internal pre-fight orchestrator, where lenses critique each other's positions, defend their own, and then either escalate the strongest disagreements or finish automatically with deterministic arbitration.
 
 **Triggers:** "pre-fight review", "adversarial review", "critique from all angles", "stress-test this decision", "debate", "fully automatic pre-fight", "auto-resolve disagreements", "without user input"
 
 ```
-Run pre-fight review on our pricing strategy
-Run fully automatic pre-fight review on our pricing strategy
+Run polylens pre-fight review on our pricing strategy
+Run polylens fully automatic pre-fight review on our pricing strategy
 ```
 
 Normal pre-fight mode remains interactive and stops when a fundamental disagreement needs user direction. Add wording such as "fully automatic", "decide for me", or "without user input" to force automatic arbitration and a completed recommendation.
@@ -78,17 +78,25 @@ Filename convention:
 
 ## Available Skills
 
-### Public Skills (3)
+### Public Skills (2)
 
 | Skill | Purpose |
 |---|---|
-| `polylens-executive-review` | Full multi-lens review with automatic lens selection, collision detection, and synthesis |
+| `polylens` | Top-level multi-lens router that selects standard review or pre-fight mode |
 | `polylens-lens-review` | Single-entry focused review that routes to the most relevant lens |
-| `polylens-pre-fight` | Adversarial critique mode — lenses attack and defend positions |
 
 ### Routed Lens Library
 
-PolyLens still includes the full lens set, but they now live behind the router instead of appearing as separate public skills.
+PolyLens still includes the full lens set, but they now live behind the routers instead of appearing as separate public skills.
+
+### Internal Orchestrators
+
+The multi-lens modes are now internal implementation files rather than user-facing skills:
+
+| Orchestrator | Purpose |
+|---|---|
+| `polylens-executive-review` | Standard decision brief flow |
+| `polylens-pre-fight` | Adversarial critique and arbitration flow |
 
 ### Shared Playbooks
 
@@ -110,14 +118,17 @@ These are reusable methods available to every lens and orchestrator. They are no
 ```
 polylens/
 ├── skills/                          # Skill definitions (invocable by OpenCode)
-│   ├── polylens-executive-review.md # Orchestrator: full review pipeline
+│   ├── polylens/                    # Top-level multi-lens router
 │   ├── polylens-lens-review.md      # Single-entry focused lens router
-│   ├── polylens-pre-fight.md        # Orchestrator: adversarial critique
 │   ├── shared/                      # Bundled runtime docs used by installed skills
 │   │   ├── prompts/
 │   │   ├── engines/
 │   │   ├── lenses/
+│   │   ├── orchestrators/
 │   │   └── playbooks/
+├── orchestrators/                   # Internal multi-lens review modes
+│   ├── polylens-executive-review.md
+│   └── polylens-pre-fight.md
 ├── lenses/                          # Source lens briefs
 │   └── lens-*.md
 ├── engines/                         # Shared processing logic
@@ -136,11 +147,12 @@ polylens/
 
 The root `prompts/`, `engines/`, and `lenses/` directories remain the source docs for development. Their runtime copies live under `skills/shared/` so installed agents only need access to the symlinked `skills/` tree.
 
-### Four-Layer Design
+### Five-Layer Design
 
 | Layer | Purpose | Files |
 |---|---|---|
-| **Skills** | Public entrypoints only | `skills/polylens-*/SKILL.md` |
+| **Skills** | Public entrypoints only | `skills/polylens*/SKILL.md` |
+| **Orchestrators** | Internal multi-lens mode implementations | `orchestrators/*.md`, `skills/shared/orchestrators/*.md` |
 | **Lens Library** | Internal perspective briefs selected by routing | `lenses/lens-*.md`, `skills/shared/lenses/lens-*.md` |
 | **Engines** | Shared collision detection and synthesis | `engines/*.md` |
 | **Prompts** | Lens registry, conflict taxonomy, playbooks, templates | `prompts/*.md`, `prompts/playbooks/*.md` |

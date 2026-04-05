@@ -39,18 +39,18 @@ cd polylens
 
 > **Tip:** After installation, verify skills are detected by asking your agent: *"What skills do you have available?"*
 
-The installable `skills/` tree is self-contained. Runtime references stay inside that tree by using sibling-relative paths such as `../shared/prompts/...`, `../shared/engines/...`, and `../shared/lenses/...`, so PolyLens can review another repository without extra directory permissions.
+The installable `skills/` tree is self-contained. Runtime references stay inside that tree by using sibling-relative paths such as `../shared/prompts/...`, `../shared/engines/...`, `../shared/lenses/...`, and `../shared/orchestrators/...`, so PolyLens can review another repository without extra directory permissions.
 
 ---
 
 ## 🚀 Usage
 
-### Mode 1: Executive Review
+### Mode 1: Standard PolyLens Review
 
-Full multi-lens analysis. The orchestrator auto-selects 2-4 relevant lenses, detects conflicts, and produces a structured decision brief.
+Full multi-lens analysis through the top-level `polylens` router. It defaults to the standard review flow unless the prompt clearly asks for adversarial or pre-fight behavior.
 
 ```
-Run executive review on our plan to migrate from PostgreSQL to MongoDB
+Run polylens review on our plan to migrate from PostgreSQL to MongoDB
 ```
 
 **Triggers:** *"run executive review"*, *"polylens review"*, *"multi-lens review"*, *"analyze from multiple perspectives"*
@@ -64,20 +64,20 @@ Run lens review on our new API design
 Run lens review on our authentication flow and use the CISO lens
 ```
 
-### Mode 3: Pre-Fight
+### Mode 3: PolyLens Pre-Fight
 
-Adversarial critique. Lenses attack each other's positions, defend their own, and then either escalate the strongest disagreements for user choice or finish automatically with deterministic arbitration.
+Adversarial critique through the same top-level `polylens` router. When the prompt asks for pre-fight, debate, adversarial review, or automatic arbitration, PolyLens routes to the internal pre-fight orchestrator.
 
 ```
-Run pre-fight review on our pricing strategy
-Run fully automatic pre-fight review on our pricing strategy
+Run polylens pre-fight review on our pricing strategy
+Run polylens fully automatic pre-fight review on our pricing strategy
 ```
 
 **Triggers:** *"pre-fight review"*, *"adversarial review"*, *"critique from all angles"*, *"stress-test this decision"*, *"debate"*, *"fully automatic pre-fight"*, *"auto-resolve disagreements"*, *"without user input"*
 
 Standard pre-fight stays interactive and stops when a fundamental split needs a user decision. Add language like *"fully automatic"*, *"decide for me"*, or *"without user input"* to force automatic arbitration and a completed recommendation.
 
-Pre-fight is self-contained at runtime: it uses the embedded registry and lens briefs inside the pre-fight skill instead of reading other PolyLens files after activation.
+Pre-fight remains self-contained at runtime: the router delegates to the internal pre-fight orchestrator, which uses its embedded registry and lens briefs instead of reading other PolyLens files after activation.
 
 ### Markdown Artifact Storage
 
@@ -139,15 +139,26 @@ Beyond lenses, PolyLens includes reusable playbooks that any lens or orchestrato
 | ⚠️ **Risk Assessment** | Identify, score, prioritize, and mitigate cross-domain risks | When tradeoffs need explicit exposure mapping |
 | 🚨 **Crisis Management** | Structure command, containment, continuity, and recovery | When an active crisis needs disciplined response |
 | 📢 **PR Crisis Recovery** | Assess reputation damage and design a trust-rebuilding response | When public narrative and stakeholder trust are at risk |
+| 🏁 **Competitive Analysis** | Map competitors, compare positioning, identify threats and opportunities | When strategic decisions need competitive context |
+| 🚀 **Go-to-Market Planning** | Structure launches, messaging, channels, and success metrics | When launching a product, feature, or entering a new market |
+| 🔮 **Scenario Planning** | Explore multiple futures, stress-test strategies, find early signals | When uncertainty is high and a single forecast is insufficient |
+| 🏢 **Vendor Evaluation** | Scorecard-based vendor comparison, TCO, and lock-in risk | When choosing between tools, vendors, or build vs. buy |
+| 🗣️ **Customer Interview Synthesis** | Extract patterns, map JTBD, prioritize problems from interviews | When qualitative research needs to drive product decisions |
+| 💼 **Business Model Analysis** | Canvas, unit economics, pricing, revenue model stress-testing | When evaluating or designing a business model |
+| 🎯 **OKR Planning** | Set, align, and cascade objectives and key results | When setting quarterly or annual goals |
+| 📋 **Project Post-Mortem** | Structured review, lessons learned, action items | When a project concludes and you need to capture learnings |
+| ✅ **Product Launch Readiness** | Pre-launch checklist, go/no-go, cross-functional alignment | Before any product or feature launch |
+| 💰 **Cost-Benefit Analysis** | NPV, ROI, payback, sensitivity analysis across alternatives | When comparing investment options with financial rigor |
+| 📊 **Board Reporting** | Board deck structure, KPI narrative, decision framing | When preparing board meeting materials |
 
 These live under `prompts/playbooks/` in source form and under `skills/shared/playbooks/` in the installable runtime bundle.
 
 ### Usage Examples
 
 ```
-Run executive review on the outage and apply the root-cause-analysis playbook
+Run polylens review on the outage and apply the root-cause-analysis playbook
 Run CFO + CEO review on the acquisition and use the financial-statement-analysis playbook
-Run pre-fight review on the launch plan and include a risk assessment
+Run polylens pre-fight review on the launch plan and include a risk assessment
 ```
 
 ---
@@ -156,6 +167,8 @@ Run pre-fight review on the launch plan and include a risk assessment
 
 ```
 Your Problem
+    ↓
+Mode Routing        ← standard review or pre-fight
     ↓
 Smart Lens Selection  ← 2-4 lenses chosen by context
     ↓
@@ -170,7 +183,7 @@ Decision Brief        ← 5-section structured output
 
 ### Smart Lens Selection
 
-The orchestrator doesn't run all lenses. It selects the most relevant ones:
+The standard review orchestrator doesn't run all lenses. It selects the most relevant ones:
 
 1. **Filter** — only active lenses considered
 2. **Anchor** — identify the primary decision being asked, separate from supporting constraints
@@ -250,14 +263,17 @@ Shared playbooks are also available when the analysis needs more structure: **Da
 ```
 polylens/
 ├── skills/
-│   ├── polylens-executive-review/    # Orchestrator: full pipeline
+│   ├── polylens/                     # Top-level multi-lens router
 │   ├── polylens-lens-review/         # Single-entry focused lens router
-│   ├── polylens-pre-fight/           # Orchestrator: adversarial mode
 │   ├── shared/                       # Bundled runtime docs used by installed skills
 │   │   ├── prompts/
 │   │   ├── engines/
 │   │   ├── lenses/
+│   │   ├── orchestrators/
 │   │   └── playbooks/
+├── orchestrators/                    # Internal multi-lens review modes
+│   ├── polylens-executive-review.md
+│   └── polylens-pre-fight.md
 ├── lenses/                           # Source lens briefs
 │   └── lens-*.md
 ├── engines/                          # Shared processing logic
@@ -293,11 +309,12 @@ Each lens now lives as a shared brief file instead of a public skill entry:
 | `lenses/lens-<name>.md` | Source lens definition — philosophy, directives, metrics, strategy, review process |
 | `skills/shared/lenses/lens-<name>.md` | Bundled runtime copy used by installed skills |
 
-### Three-Layer Design
+### Five-Layer Design
 
 | Layer | Purpose | Files |
 |-------|---------|-------|
-| **Skills** | Public entrypoints only | `skills/polylens-*/SKILL.md` |
+| **Skills** | Public entrypoints only | `skills/polylens*/SKILL.md` |
+| **Orchestrators** | Internal multi-lens mode implementations | `orchestrators/*.md`, `skills/shared/orchestrators/*.md` |
 | **Lens Library** | Internal perspective briefs selected by routing | `lenses/lens-*.md`, `skills/shared/lenses/lens-*.md` |
 | **Engines** | Shared collision detection and synthesis | `engines/*.md` |
 | **Prompts** | Lens registry, conflict taxonomy, shared playbooks, and templates | `prompts/*.md`, `prompts/playbooks/*.md` |
@@ -307,7 +324,7 @@ Each lens now lives as a shared brief file instead of a public skill entry:
 | Aspect | Lenses | Shared Playbooks |
 |--------|--------|---------------|
 | **Purpose** | Multi-perspective decision review | Reusable analytical methods inside a review |
-| **Invocation** | Routed through `polylens-executive-review` or `polylens-lens-review` | Applied by lenses or orchestrators when needed |
+| **Invocation** | Routed through `polylens` or `polylens-lens-review` | Applied by lenses or orchestrators when needed |
 | **Output** | Position block (GO/MODIFY/BLOCK) | Supporting analysis folded into a lens position or synthesis |
 | **Examples** | CEO, CTO, CPO, CFO, CRO | Data Analysis, Financial Statement Analysis, Root Cause Analysis |
 
@@ -346,7 +363,7 @@ Contributions welcome:
 
 ### Contract Validation
 
-PolyLens includes a repo-native validator that checks the working markdown contract across the lens registry, shared lens library, orchestrators, engines, bundled runtime copies, and output templates.
+PolyLens includes a repo-native validator that checks the working markdown contract across the public routers, internal orchestrators, shared lens library, engines, bundled runtime copies, and output templates.
 
 ```bash
 python3 tools/validate_markdown_contracts.py
