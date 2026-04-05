@@ -61,6 +61,14 @@ def normalize_bundled_shared_refs(text: str) -> str:
     )
 
 
+def normalize_bundled_prompt_refs(text: str) -> str:
+    return (
+        text.replace("../playbooks/", "prompts/playbooks/")
+        .replace("../prompts/", "prompts/")
+        .replace("../shared/prompts/", "prompts/")
+    )
+
+
 def parse_registry(text: str) -> tuple[list[str], dict[str, dict[str, str]]]:
     headings = list(
         re.finditer(r"^###\s+([A-Z][A-Za-z]*)\s+—\s+.+$", text, flags=re.MULTILINE)
@@ -206,10 +214,28 @@ def validate_bundled_shared_docs(errors: list[str]) -> None:
     for source_path, bundled_path in prompt_pairs:
         if source_path.exists() and bundled_path.exists():
             require(
-                read_text(source_path) == read_text(bundled_path),
+                read_text(source_path) == normalize_bundled_prompt_refs(read_text(bundled_path)),
                 (
                     f"bundled prompt mismatch: {bundled_path.relative_to(ROOT)} must match "
-                    f"{source_path.relative_to(ROOT)}"
+                    f"{source_path.relative_to(ROOT)}. Run `python3 tools/sync_playbooks.py` when the "
+                    "playbook bundle drifts."
+                ),
+                errors,
+            )
+
+    for playbook_path in sorted((ROOT / "prompts" / "playbooks").glob("*.md")):
+        bundled_path = SHARED_DIR / "playbooks" / playbook_path.name
+        require(
+            bundled_path.exists(),
+            f"missing bundled playbook: {bundled_path.relative_to(ROOT)}",
+            errors,
+        )
+        if bundled_path.exists():
+            require(
+                read_text(playbook_path) == read_text(bundled_path),
+                (
+                    f"bundled playbook mismatch: {bundled_path.relative_to(ROOT)} must match "
+                    f"{playbook_path.relative_to(ROOT)}. Run `python3 tools/sync_playbooks.py` to resync."
                 ),
                 errors,
             )

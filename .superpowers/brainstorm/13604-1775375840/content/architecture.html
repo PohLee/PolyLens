@@ -1,0 +1,83 @@
+<h2>PolyLens Extension: Harness & Hook System</h2>
+<p class="subtitle">Architecture overview — showing how new capabilities fit into existing PolyLens</p>
+
+<div class="mockup">
+  <div class="mockup-header">Current PolyLens Architecture</div>
+  <div class="mockup-body" style="padding: 20px; font-family: monospace; font-size: 13px; line-height: 1.6;">
+    <div style="background: #1a1a2e; border-radius: 8px; padding: 16px; border: 1px solid #333;">
+      <div style="text-align: center; color: #e94560; font-weight: bold; margin-bottom: 12px;">Your Problem → Router → Lens Selection → Individual Reviews → Collision → Synthesis → Decision Brief</div>
+      <div style="display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;">
+        <div style="background: #16213e; padding: 8px 12px; border-radius: 4px; border: 1px solid #0f3460;">Skills</div>
+        <span style="color: #666;">→</span>
+        <div style="background: #16213e; padding: 8px 12px; border-radius: 4px; border: 1px solid #0f3460;">Orchestrators</div>
+        <span style="color: #666;">→</span>
+        <div style="background: #16213e; padding: 8px 12px; border-radius: 4px; border: 1px solid #0f3460;">Engines</div>
+        <span style="color: #666;">→</span>
+        <div style="background: #16213e; padding: 8px 12px; border-radius: 4px; border: 1px solid #0f3460;">Output</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top: 16px;">
+  <div class="mockup-header" style="background: #0f3460;">Proposed Extension Architecture</div>
+  <div class="mockup-body" style="padding: 20px; font-family: monospace; font-size: 13px; line-height: 1.6;">
+    <div style="background: #1a1a2e; border-radius: 8px; padding: 16px; border: 2px solid #533483;">
+      <div style="color: #e94560; font-weight: bold; margin-bottom: 8px;">Hook System (Pipeline Stage + Custom Plugin)</div>
+      <div style="display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; margin-bottom: 12px;">
+        <div style="background: #533483; padding: 6px 10px; border-radius: 4px; font-size: 11px;">Pre-Analysis Hook</div>
+        <span style="color: #666;">→</span>
+        <div style="background: #533483; padding: 6px 10px; border-radius: 4px; font-size: 11px;">Lens Select Hook</div>
+        <span style="color: #666;">→</span>
+        <div style="background: #533483; padding: 6px 10px; border-radius: 4px; font-size: 11px;">Review Hook</div>
+        <span style="color: #666;">→</span>
+        <div style="background: #533483; padding: 6px 10px; border-radius: 4px; font-size: 11px;">Collision Hook</div>
+        <span style="color: #666;">→</span>
+        <div style="background: #533483; padding: 6px 10px; border-radius: 4px; font-size: 11px;">Synthesis Hook</div>
+        <span style="color: #666;">→</span>
+        <div style="background: #533483; padding: 6px 10px; border-radius: 4px; font-size: 11px;">Post-Analysis Hook</div>
+      </div>
+      <div style="color: #e94560; font-weight: bold; margin-bottom: 8px; margin-top: 12px;">Harness System (Framework + Reasoning Control)</div>
+      <div style="display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap;">
+        <div style="background: #2d6a4f; padding: 6px 10px; border-radius: 4px; font-size: 11px;">Multi-Instance Orchestrator</div>
+        <span style="color: #666;">|</span>
+        <div style="background: #2d6a4f; padding: 6px 10px; border-radius: 4px; font-size: 11px;">Reasoning Depth Control</div>
+        <span style="color: #666;">|</span>
+        <div style="background: #2d6a4f; padding: 6px 10px; border-radius: 4px; font-size: 11px;">Constraint Engine</div>
+        <span style="color: #666;">|</span>
+        <div style="background: #2d6a4f; padding: 6px 10px; border-radius: 4px; font-size: 11px;">Validation Harness</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options" style="margin-top: 20px;" data-multiselect>
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Framework Harness</h3>
+      <p>Orchestrate multiple PolyLens instances in sequence or parallel, chain analyses</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Reasoning Control</h3>
+      <p>Control depth, scope, constraints of the reasoning process</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Pipeline Stage Hooks</h3>
+      <p>Inject logic at specific stages: lens selection, collision, synthesis</p>
+    </div>
+  </div>
+  <div class="option" data-choice="d" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>Custom Plugin Hooks</h3>
+      <p>User-defined analysis logic and custom lenses</p>
+    </div>
+  </div>
+</div>

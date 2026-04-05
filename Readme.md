@@ -41,6 +41,11 @@ cd polylens
 
 The installable `skills/` tree is self-contained. Runtime references stay inside that tree by using sibling-relative paths such as `../shared/prompts/...`, `../shared/engines/...`, `../shared/lenses/...`, and `../shared/orchestrators/...`, so PolyLens can review another repository without extra directory permissions.
 
+Additional navigation:
+
+- Docs index: [docs/README.md](docs/README.md)
+- Artifact storage rules: [docs/polylens/README.md](docs/polylens/README.md)
+
 ---
 
 ## 🚀 Usage
@@ -287,7 +292,7 @@ polylens/
 │   ├── conflict-types.md             # 5 conflict type definitions
 │   └── output-template.md            # 5-section decision brief format
 ├── docs/
-│   ├── README.md                     # Extended documentation
+│   ├── README.md                     # Docs index
 │   ├── polylens/
 │   │   ├── README.md                 # Artifact storage conventions
 │   │   ├── memory/                   # Generic markdown memos and working notes
@@ -364,6 +369,12 @@ Contributions welcome:
 ### Contract Validation
 
 PolyLens includes a repo-native validator that checks the working markdown contract across the public routers, internal orchestrators, shared lens library, engines, bundled runtime copies, and output templates.
+
+When you change files under `prompts/playbooks/` or `prompts/shared-playbooks.md`, resync the bundled runtime copy first:
+
+```bash
+python3 tools/sync_playbooks.py
+```
 
 ```bash
 python3 tools/validate_markdown_contracts.py
