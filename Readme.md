@@ -20,22 +20,75 @@ PolyLens fixes this by applying multiple **lenses**, forcing structured **collis
 
 ## 📦 Installation
 
-Clone or download this repository, then link the `skills/` directory into your agent's skills folder.
+The easiest install path is to hand your agent a single prompt and let it follow the fetchable install instructions.
+
+### Agent Prompt
+
+```text
+Fetch and follow installation instructions from https://raw.githubusercontent.com/PohLee/PolyLens/main/INSTALL.md.
+Detect my platform and target agent, install PolyLens from https://github.com/PohLee/PolyLens, preserve the sibling skill layout `polylens/`, `polylens-lens-review/`, and `shared/`, and do not symlink the whole repo root. Verify the skills are discoverable when finished.
+```
+
+### What The Agent Will Do
+
+The install instructions tell the agent to:
+
+- use this repository as the source
+- detect the target agent and skills location
+- expose `skills/polylens`, `skills/polylens-lens-review`, and `skills/shared` as sibling directories in that skills location
+- verify the install
+
+### Manual Reference
+
+If you want to install PolyLens yourself, use the steps below.
+
+Clone or download this repository, then expose the contents of the repo's `skills/` directory in an agent skills location.
 
 ```bash
 git clone <repository-url> polylens
 cd polylens
 ```
 
-### Platform-Specific Setup
+### Recommended Layout
 
-| Agent | macOS / Linux | Windows (PowerShell) |
-|---|---|---|
-| **OpenCode** | `ln -s "$(pwd)/skills" ~/.config/opencode/skills/polylens` | `New-Item -ItemType Junction -Path "$env:USERPROFILE\.config\opencode\skills\polylens" -Target "$(Get-Location)\skills"` |
-| **Claude Code** | `ln -s "$(pwd)/skills" ~/.claude/skills/polylens` | `New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\polylens" -Target "$(Get-Location)\skills"` |
-| **Codex** | `ln -s "$(pwd)/skills" ~/.codex/skills/polylens` | `New-Item -ItemType Junction -Path "$env:USERPROFILE\.codex\skills\polylens" -Target "$(Get-Location)\skills"` |
-| **RooCode** | `ln -s "$(pwd)/skills" ~/.roo/skills/polylens` | `New-Item -ItemType Junction -Path "$env:USERPROFILE\.roo\skills\polylens" -Target "$(Get-Location)\skills"` |
-| **Copilot** | Follow your Copilot skill/custom-instruction path conventions and point them at this repo's `skills/` directory | Same via VS Code Settings UI |
+The target skills location should contain these three sibling directories:
+
+- `polylens/`
+- `polylens-lens-review/`
+- `shared/`
+
+Do **not** symlink the whole project root. The installable runtime bundle is the repo's `skills/` tree, and the public skills rely on `shared/` being a sibling directory via paths such as `../shared/...`.
+
+### Personal Install Via Symlink
+
+Point your agent's personal skills directory at the three directories inside this repo's `skills/` folder.
+
+macOS / Linux example:
+
+```bash
+mkdir -p ~/.claude/skills
+ln -s "$(pwd)/skills/polylens" ~/.claude/skills/polylens
+ln -s "$(pwd)/skills/polylens-lens-review" ~/.claude/skills/polylens-lens-review
+ln -s "$(pwd)/skills/shared" ~/.claude/skills/shared
+```
+
+Windows PowerShell example:
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\skills" | Out-Null
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\polylens" -Target "$(Get-Location)\skills\polylens" | Out-Null
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\polylens-lens-review" -Target "$(Get-Location)\skills\polylens-lens-review" | Out-Null
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\shared" -Target "$(Get-Location)\skills\shared" | Out-Null
+```
+
+If your agent uses a different personal skills directory, replace `~/.claude/skills` with that agent's equivalent skills path. The important part is that the final directory contains the three sibling directories shown above.
+
+### VS Code / Copilot
+
+GitHub Copilot in VS Code discovers project skills from `.github/skills/`, `.claude/skills/`, or `.agents/skills/` by default. For this repo, use one of these approaches:
+
+- Copy or symlink `skills/polylens`, `skills/polylens-lens-review`, and `skills/shared` into `.github/skills/` or `.claude/skills/`
+- Or add `./skills` to the `chat.skillsLocations` setting so VS Code treats this repo's `skills/` folder as a skill location
 
 > **Tip:** After installation, verify skills are detected by asking your agent: *"What skills do you have available?"*
 
@@ -273,32 +326,13 @@ Shared playbooks are also available when the analysis needs more structure: **Da
 
 ```
 polylens/
-├── skills/
-│   ├── polylens/                     # Top-level multi-lens router
-│   ├── polylens-lens-review/         # Single-entry focused lens router
-│   ├── shared/                       # Bundled runtime docs used by installed skills
-│   │   ├── prompts/
-│   │   ├── engines/
-│   │   ├── lenses/
-│   │   ├── orchestrators/
-│   │   └── playbooks/
-├── orchestrators/                    # Internal multi-lens review modes
-│   ├── polylens-executive-review.md
-│   └── polylens-pre-fight.md
-├── lenses/                           # Source lens briefs
-│   └── lens-*.md
-├── engines/                          # Shared processing logic
-│   ├── collision.md                  # Conflict detection & classification
-│   └── synthesis.md                  # Resolution strategies & output
-├── prompts/                          # Centralized data & templates
-│   ├── lens-registry.md              # Lens metadata (domains, triggers, pairs)
-│   ├── lens-capabilities.md          # Shared toolset & frameworks
-│   ├── shared-playbooks.md           # Reusable analysis methods index
-│   ├── playbooks/                    # Detailed shared playbooks
-│   ├── conflict-types.md             # 5 conflict type definitions
-│   └── output-template.md            # 5-section decision brief format
+├── .github/
+│   └── workflows/                    # CI validation for markdown contract drift
+├── .superpowers/
+│   └── brainstorm/                   # Workspace-local supporting assets
 ├── docs/
 │   ├── README.md                     # Docs index
+│   ├── project-memory-model.md       # Project memory schema
 │   ├── polylens/
 │   │   ├── README.md                 # Artifact storage conventions
 │   │   ├── memory/                   # Generic markdown memos and working notes
@@ -306,10 +340,38 @@ polylens/
 │   │   ├── plans/                    # Plans and proposals
 │   │   ├── pre-fight/                # Saved pre-fight reports
 │   │   └── reviews/                  # Saved executive review briefs
+│   └── superpowers/                  # Superpower-specific docs and plans
+├── engines/                          # Shared processing logic
+│   ├── collision.md                  # Conflict detection & classification
+│   └── synthesis.md                  # Resolution strategies & output
+├── lenses/                           # Source lens briefs
+│   └── lens-*.md
+├── orchestrators/                    # Internal multi-lens review modes
+│   ├── polylens-executive-review.md
+│   └── polylens-pre-fight.md
+├── prompts/                          # Centralized data and source templates
+│   ├── lens-registry.md              # Lens metadata (domains, triggers, pairs)
+│   ├── lens-capabilities.md          # Shared toolset and frameworks
+│   ├── shared-playbooks.md           # Reusable analysis methods index
+│   ├── playbooks/                    # Detailed shared playbooks
+│   ├── conflict-types.md             # 5 conflict type definitions
+│   └── output-template.md            # 5-section decision brief format
+├── skills/
+│   ├── polylens/                     # Top-level multi-lens router
+│   ├── polylens-lens-review/         # Single-entry focused lens router
+│   └── shared/                       # Installable runtime bundle used by the public skills
+│   │   ├── prompts/
+│   │   ├── engines/
+│   │   ├── lenses/
+│   │   ├── orchestrators/
+│   │   └── playbooks/
+├── tools/
+│   ├── sync_playbooks.py             # Sync source playbooks into the runtime bundle
+│   └── validate_markdown_contracts.py# Validate routers, lenses, engines, and templates stay aligned
 └── README.md                         # Project overview
 ```
 
-The root `prompts/`, `engines/`, and `lenses/` directories remain the source docs for development. Their runtime copies live under `skills/shared/` so installed agents only need access to the symlinked `skills/` tree.
+The root `prompts/`, `engines/`, `lenses/`, and `orchestrators/` directories remain the source docs for development. Their installable runtime copies live under `skills/shared/`, which is why the published install shape only needs the sibling `polylens/`, `polylens-lens-review/`, and `shared/` directories.
 
 ### Lens Library Structure
 
