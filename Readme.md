@@ -79,6 +79,23 @@ Standard pre-fight stays interactive and stops when a fundamental split needs a 
 
 Pre-fight is self-contained at runtime: it uses the embedded registry and lens briefs inside the pre-fight skill instead of reading other PolyLens files after activation.
 
+### Markdown Artifact Storage
+
+When a user asks PolyLens to generate and save a markdown file, store it under `docs/` instead of creating loose `.md` files at the repo root.
+
+- Use `docs/polylens/reviews/` for executive review briefs
+- Use `docs/polylens/pre-fight/` for pre-fight reports
+- Use `docs/polylens/plans/` for plans and proposals
+- Use `docs/polylens/memory/` for memory notes, working notes, and generic markdown memos when no better category is clear
+- Use `docs/polylens/notes/` for other supporting notes
+
+Filename convention:
+
+- `YYMMDD_slug_rN.md`
+- Example: `docs/polylens/memory/260405_selection-logic_r1.md`
+- Use a clear, descriptive slug rather than a very short label; prefer names like `selection-logic-routing-fix` over `fix`
+- Start at `r1`; increment the revision number when saving another version of the same dated slug
+
 ---
 
 ## 👥 The Lenses
@@ -130,15 +147,16 @@ The orchestrator doesn't run all lenses. It selects the most relevant ones:
 
 1. **Filter** — only active lenses considered
 2. **Anchor** — identify the primary decision being asked, separate from supporting constraints
-3. **Match** — scan problem against each lens's domains and triggers
-4. **Downweight ambient constraints** — budget, timeline, team size, compliance, or risk details are supporting signals unless explicitly decision-driving
-5. **Score** — rank anchor matches ahead of lenses that only match surrounding constraints
-6. **Boost** — pair complementary lenses (+0.5)
-7. **Add strategy complement when needed** — if the decision is foundational and company-shaping, include the nearest strategy lens even when the wording is technical
-8. **Select** — choose 2-4 lenses that cover the anchor decision first, then only the strongest secondary tradeoffs
-9. **Fallback** — default trio if no strong matches
+3. **Check ownership** — if a lens role owns that decision category, it should usually be included before adjacent lenses that only evaluate consequences
+4. **Match** — scan problem against each lens's domains, triggers, and owned decision categories
+5. **Downweight ambient constraints** — budget, timeline, team size, compliance, or risk details are supporting signals unless explicitly decision-driving
+6. **Apply veto coverage** — if the prompt explicitly touches a veto area, include that lens or explain why it is being deferred
+7. **Boost** — pair complementary lenses (+0.5)
+8. **Add strategy complement when needed** — if the decision is foundational and company-shaping, include the nearest strategy lens even when the wording is technical
+9. **Select** — choose 2-4 lenses that cover the anchor decision first, then only the strongest secondary tradeoffs
+10. **Fallback** — default trio if no strong matches
 
-Example: for a question about "tech stack," CTO should be selected first and CEO should usually be included as the strategic counterpart. Add CISO only when security/compliance is itself part of the decision. Add CFO only when spend, runway, or ROI is being explicitly optimized.
+Example: for a question about "tech stack," CTO should be selected first and CEO should usually be included as the strategic counterpart. For a question about "product pricing," CRO should usually be selected first because pricing is a revenue-system decision; add CEO for strategic posture, CFO for margin/runway impact, CPO for packaging/tiering, and YC only when startup simplicity or fundraising framing is explicit.
 
 You can always override: *"Run CTO + CISO review on this auth system"*
 
@@ -208,42 +226,8 @@ polylens/
 │   ├── shared/                       # Bundled runtime docs used by installed skills
 │   │   ├── prompts/
 │   │   └── engines/
-│   ├── lens-ceo/                     # Chief Executive Officer
+│   ├── lens-***/                     # Individual lenses skill
 │   │   └── SKILL.md
-│   ├── lens-cto/                     # Chief Technology Officer
-│   │   └── SKILL.md
-│   ├── lens-cpo/                     # Chief Product Officer
-│   │   └── SKILL.md
-│   ├── lens-yc/                      # Y Combinator
-│   │   └── SKILL.md
-│   ├── lens-cio/                     # Chief Information Officer
-│   │   └── SKILL.md
-│   ├── lens-cdo/                     # Chief Data Officer
-│   │   └── SKILL.md
-│   ├── lens-ciso/                    # Chief Information Security Officer
-│   │   └── SKILL.md
-│   ├── lens-cxo/                     # Chief Experience Officer
-│   │   └── SKILL.md
-│   ├── lens-cfo/                     # Chief Financial Officer
-│   │   └── SKILL.md
-│   ├── lens-coo/                     # Chief Operating Officer
-│   │   └── SKILL.md
-│   ├── lens-cmo/                     # Chief Marketing Officer
-│   │   └── SKILL.md
-│   ├── lens-cbdo/                    # Chief Business Development Officer
-│   │   └── SKILL.md
-│   ├── lens-cro/                     # Chief Revenue Officer
-│   │   └── SKILL.md
-│   ├── lens-caio/                    # Chief AI Officer
-│   │   └── SKILL.md
-│   ├── lens-cago/                    # Chief Agile Officer
-│   │   └── SKILL.md
-│   ├── lens-chro/                    # Chief Human Resources Officer
-│   │   └── SKILL.md
-│   ├── lens-clo/                     # Chief Legal Officer
-│   │   └── SKILL.md
-│   └── lens-cco/                     # Chief Customer Officer
-│       └── SKILL.md
 ├── engines/                          # Shared processing logic
 │   ├── collision.md                  # Conflict detection & classification
 │   └── synthesis.md                  # Resolution strategies & output
@@ -252,6 +236,15 @@ polylens/
 │   ├── lens-capabilities.md          # Shared toolset & frameworks
 │   ├── conflict-types.md             # 5 conflict type definitions
 │   └── output-template.md            # 5-section decision brief format
+├── docs/
+│   ├── README.md                     # Extended documentation
+│   ├── polylens/
+│   │   ├── README.md                 # Artifact storage conventions
+│   │   ├── memory/                   # Generic markdown memos and working notes
+│   │   ├── notes/                    # Supporting notes
+│   │   ├── plans/                    # Plans and proposals
+│   │   ├── pre-fight/                # Saved pre-fight reports
+│   │   └── reviews/                  # Saved executive review briefs
 └── README.md                         # Project overview
 ```
 

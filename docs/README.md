@@ -70,6 +70,23 @@ Run fully automatic pre-fight review on our pricing strategy
 
 Normal pre-fight mode remains interactive and stops when a fundamental disagreement needs user direction. Add wording such as "fully automatic", "decide for me", or "without user input" to force automatic arbitration and a completed recommendation.
 
+## Markdown Artifact Storage
+
+When PolyLens is asked to generate and save a markdown file, store it under `docs/` instead of creating loose `.md` files at the repo root.
+
+- `docs/polylens/reviews/` for executive review briefs
+- `docs/polylens/pre-fight/` for pre-fight reports
+- `docs/polylens/plans/` for plans and proposals
+- `docs/polylens/memory/` for memory notes, working notes, and generic markdown memos when no better category is clear
+- `docs/polylens/notes/` for other supporting notes
+
+Filename convention:
+
+- `YYMMDD_slug_rN.md`
+- Example: `docs/polylens/memory/260405_selection-logic_r1.md`
+- Use a clear, descriptive slug rather than a very short label; prefer names like `selection-logic-routing-fix` over `fix`
+- Start at `r1`; increment the revision number when saving another version of the same dated slug
+
 ---
 
 ## Available Skills
@@ -169,15 +186,16 @@ The orchestrator does not run all lenses. It selects the 2-4 most relevant lense
 
 1. **Filter active lenses** — only lenses with `active: true` are considered
 2. **Find the decision anchor** — identify the primary decision being asked, separate from supporting constraints
-3. **Keyword match** — scan problem against each lens's `domains` and `triggers`
-4. **Downweight ambient constraints** — budget, timeline, team size, compliance, or risk details are supporting signals unless explicitly decision-driving
-5. **Score & rank** — count matches, but prefer lenses that match the anchor decision over lenses that only match surrounding constraints
-6. **Pairing boost** — if a top lens has `pairs_with` recommendations, boost those lenses by +0.5
-7. **Add strategy complement when needed** — if the decision is foundational and company-shaping, include the nearest strategy lens even when the wording is technical
-8. **Select top 2-4** — cover the anchor decision first, then only the strongest secondary tradeoffs
-9. **Fallback** — if no strong matches (all scores < 2), use default trio: CEO + CTO + CPO
+3. **Check ownership** — if a lens role owns that decision category, it should usually be included before adjacent lenses that only evaluate consequences
+4. **Keyword match** — scan problem against each lens's `domains`, `triggers`, and owned decision categories
+5. **Downweight ambient constraints** — budget, timeline, team size, compliance, or risk details are supporting signals unless explicitly decision-driving
+6. **Apply veto coverage** — if the prompt explicitly touches a veto area, include that lens or explain why it is being deferred
+7. **Pairing boost** — if a top lens has `pairs_with` recommendations, boost those lenses by +0.5
+8. **Add strategy complement when needed** — if the decision is foundational and company-shaping, include the nearest strategy lens even when the wording is technical
+9. **Select top 2-4** — cover the anchor decision first, then only the strongest secondary tradeoffs
+10. **Fallback** — if no strong matches (all scores < 2), use default trio: CEO + CTO + CPO
 
-Example: for a question about "tech stack," CTO should be selected first and CEO should usually be included as the strategic counterpart. Add CISO only when security/compliance is itself part of the decision. Add CFO only when spend, runway, or ROI is being explicitly optimized.
+Example: for a question about "tech stack," CTO should be selected first and CEO should usually be included as the strategic counterpart. For a question about "product pricing," CRO should usually be selected first because pricing is a revenue-system decision; add CEO for strategic posture, CFO for margin/runway impact, CPO for packaging/tiering, and YC only when startup simplicity or fundraising framing is explicit.
 
 User-specified lenses always override automatic selection.
 

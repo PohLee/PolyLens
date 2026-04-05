@@ -33,14 +33,19 @@ Use the embedded lens registry in this skill. Do not read external prompt files 
 **If no lenses specified:** Run the selection algorithm:
 1. Filter active lenses: Only consider lenses where `active: true`
 2. Identify the primary decision anchor and separate it from supporting constraints such as budget, timeline, team size, compliance, or risk
-3. Score explicit trigger phrase matches at +2 and domain/theme matches at +1
-4. Downweight supporting constraints unless the user explicitly asks to optimize for them or they are central to the decision itself
-5. Apply `pairs_with` boosts (+0.5, only if active)
-6. If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, usually include CEO with CTO.
-7. Select 2-4 lenses with the best coverage of the anchor decision and only the strongest secondary tradeoffs
-8. Do not add finance, security, or operations lenses solely because those concerns exist in the background; require explicit evidence that they are decision-driving
-9. Break ties deterministically: decision-anchor match, explicit wording match, trigger score, `default: true`, registry order
-10. Fall back to the default set from the registry if no strong matches
+3. Check which lens role owns that decision class in the embedded registry. Owner lenses should be selected before adjacent lenses that only judge consequences of the decision.
+4. Score explicit trigger phrase matches at +2 and domain/theme matches at +1
+5. Downweight supporting constraints unless the user explicitly asks to optimize for them or they are central to the decision itself
+6. If the prompt explicitly touches a veto area for a lens, include that lens or explain why it is being deferred
+7. Apply `pairs_with` boosts (+0.5, only if active)
+8. If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, usually include CEO with CTO.
+9. Never let YC, CFO, or other adjacent lenses displace the primary owner of the decision anchor when that owner is active and clearly applicable
+10. Select 2-4 lenses with the best coverage of the anchor decision and only the strongest secondary tradeoffs
+11. Do not add finance, security, or operations lenses solely because those concerns exist in the background; require explicit evidence that they are decision-driving
+12. Break ties deterministically: ownership match, decision-anchor match, explicit wording match, trigger score, `default: true`, registry order
+13. Fall back to the default set from the registry if no strong matches
+
+Pricing guidance: for pricing, packaging, monetization, or sales-motion decisions, include CRO by default. Add CEO for strategic posture, CFO for unit economics or runway, CPO for packaging or product tier design, and YC only when startup simplicity or fundraising framing is explicitly part of the question.
 
 **Pre-fight requires at least 2 lenses.** If only 1 lens is selected, output: "Pre-fight mode requires multiple lenses. Run individual lens review instead."
 
@@ -167,6 +172,13 @@ RECOMMENDED NEXT STEPS
 2. [Action item]
 ```
 
+If the user asks to save, export, write, or generate the report as a markdown file:
+- Store it under `docs/polylens/pre-fight/`
+- Use the filename format `YYMMDD_slug_rN.md` (example: `260405_pricing-strategy_r1.md`)
+- Use a descriptive slug that can be understood without opening the file; avoid vague names like `notes` or `fix`
+- Start with `r1` for the first saved version of that slug on that date, then increment to `r2`, `r3`, and so on for revisions
+- If the request is for a more general markdown memo rather than a pre-fight report, use the nearest matching docs subdirectory under `docs/polylens/`; default to `docs/polylens/memory/` when no better category is clear
+
 ## Error Handling
 
 - **Only one lens:** Pre-fight requires at least 2 lenses. Output "Pre-fight mode requires multiple lenses. Run individual lens review instead."
@@ -184,6 +196,7 @@ RECOMMENDED NEXT STEPS
 - Defense must address the actual critique, not deflect
 - In interactive mode, escalation must clearly state what the user needs to decide
 - In automatic mode, arbitration must clearly state why the winning option was selected
+- When the user asks for a markdown artifact file, save it under `docs/polylens/<category>/YYMMDD_slug_rN.md` instead of creating loose markdown files at the repo root
 - Keep the report compact; prioritize signal over completeness
 
 ## Embedded Lens Registry And Briefs
@@ -192,10 +205,10 @@ Use the lens metadata below for automatic selection and the lens briefs below fo
 
 ### Selection Metadata
 
-- CEO: focus business strategy, growth, pricing, roadmap. Triggers pricing strategy, go-to-market, roadmap prioritization, competitive positioning, monetization. Pairs with CTO, CPO, YC, CFO, COO, CBDO, CHRO, CRO. Default true. Bias action over perfection.
+- CEO: focus business strategy, growth, pricing, roadmap. Owns company direction, strategic pricing posture, major bets. Triggers pricing strategy, go-to-market, roadmap prioritization, competitive positioning, monetization. Pairs with CTO, CPO, YC, CFO, COO, CBDO, CHRO, CRO. Default true. Bias action over perfection.
 - CTO: focus architecture, scalability, reliability, technical debt. Triggers tech stack, API design, database choice, deployment strategy, refactoring, system architecture, performance optimization. Pairs with CIO, CISO, CDO. Default true. Bias long-term stability over short-term speed.
-- CPO: focus product value, UX, retention, product-market fit. Triggers user experience, feature prioritization, onboarding, engagement, retention, usability. Pairs with CXO, CEO, CCO. Default true. Bias product quality over internal efficiency.
-- YC: focus startup clarity, simplicity, fundability, traction. Triggers fundraising, MVP scope, traction, unit economics, burn rate. Pairs with CEO, CPO. Bias signal over noise.
+- CPO: focus product value, UX, retention, product-market fit. Owns packaging, product tiers, onboarding, feature scope. Triggers user experience, feature prioritization, onboarding, engagement, retention, usability. Pairs with CXO, CEO, CCO. Default true. Bias product quality over internal efficiency.
+- YC: focus startup clarity, simplicity, fundability, traction. Owns MVP scope and fundraising framing. Triggers fundraising, MVP scope, traction, unit economics, burn rate. Pairs with CEO, CPO. Bias signal over noise.
 - CIO: focus internal systems, automation, workflow efficiency. Triggers workflow automation, internal tools, system integration, process redesign, operational efficiency. Pairs with CTO, CDO, COO, CHRO. Bias efficiency over feature richness.
 - CAIO: focus AI strategy, governance, ethics, ROI. Triggers AI strategy, machine learning, LLM integration, AI governance, responsible AI, model monitoring. Pairs with CTO, CDO, CISO, CEO. Bias responsible AI over adoption speed.
 - CDO: focus data strategy, analytics, metrics, governance. Triggers data pipeline, analytics dashboard, ML model, metrics design, data quality. Pairs with CTO, CIO, CAIO. Bias data-driven decisions over intuition.
@@ -205,9 +218,9 @@ Use the lens metadata below for automatic selection and the lens briefs below fo
 - COO: focus operational scale, supply chain, process resilience, vendor management. Triggers operational efficiency, logistics, process redesign, capacity planning, business continuity. Pairs with CIO, CEO, CFO, CAgO. Bias process efficiency over ad-hoc solutions.
 - CMO: focus marketing strategy, acquisition, brand, growth loops. Triggers marketing campaign, brand strategy, customer acquisition, SEO, paid advertising, GTM messaging. Pairs with CEO, CXO, CBDO. Bias measurable growth over brand awareness alone.
 - CBDO: focus partnerships, channels, alliances, market expansion. Triggers partnership agreement, strategic alliance, channel strategy, co-marketing, distribution deal. Pairs with CEO, CMO, CFO. Bias strategic leverage over raw revenue volume.
-- CFO: focus budget, profitability, capital efficiency, financial planning. Triggers budget allocation, pricing strategy, burn rate, unit economics, ROI, fundraising. Pairs with CEO, COO, CBDO, CRO. Bias financial sustainability over growth at all costs.
+- CFO: focus budget, profitability, capital efficiency, financial planning. Owns budget, pricing economics, capital allocation, runway management. Triggers budget allocation, pricing strategy, burn rate, unit economics, ROI, fundraising. Pairs with CEO, COO, CBDO, CRO. Bias financial sustainability over growth at all costs.
 - CHRO: focus talent, culture, workforce planning, leadership development. Triggers hiring strategy, retention, compensation, employee engagement, succession planning. Pairs with CEO, CAgO, COO. Bias people sustainability over short-term efficiency.
-- CRO: focus revenue strategy, sales execution, pricing optimization, GTM alignment. Triggers revenue targets, sales strategy, pipeline management, quota setting, CAC, LTV, forecast accuracy. Pairs with CEO, CFO, CMO, CBDO, CCO. Bias predictable revenue over heroic sales.
+- CRO: focus revenue strategy, sales execution, pricing optimization, GTM alignment. Owns pricing, packaging, sales motion, revenue operations, monetization execution. Triggers pricing, product pricing, pricing optimization, pricing model, pricing tiers, packaging, discounting, monetization, revenue targets, sales strategy, pipeline management, quota setting, CAC, LTV, forecast accuracy. Pairs with CEO, CFO, CMO, CBDO, CCO. Bias predictable revenue over heroic sales.
 - CLO: focus legal risk, contracts, governance, IP, regulatory compliance. Triggers contract review, regulatory compliance, terms of service, data privacy law, IP protection. Pairs with CISO, CCO, CFO, CEO. Bias legal compliance over business speed.
 - CCO: focus customer retention, support quality, success, advocacy. Triggers customer retention, churn reduction, CSAT, customer success, onboarding experience, renewal management. Pairs with CPO, CRO, CXO, CEO. Bias retention over acquisition speed.
 

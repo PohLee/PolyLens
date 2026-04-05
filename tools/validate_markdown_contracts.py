@@ -72,6 +72,8 @@ def parse_registry(text: str) -> tuple[list[str], dict[str, dict[str, str]]]:
             "focus",
             "domains",
             "triggers",
+            "owns_decisions",
+            "veto_on",
             "pairs_with",
             "default",
             "active",
@@ -109,6 +111,8 @@ def validate_registry(errors: list[str]) -> list[str]:
             "focus",
             "domains",
             "triggers",
+            "owns_decisions",
+            "veto_on",
             "pairs_with",
             "default",
             "active",
@@ -294,6 +298,8 @@ def validate_orchestrators(errors: list[str]) -> None:
         "../shared/engines/collision.md",
         "../shared/engines/synthesis.md",
         "../shared/prompts/output-template.md",
+        "docs/polylens/reviews/",
+        "YYMMDD_slug_rN.md",
         "Break ties deterministically",
         "Deduplicate conflicts that describe the same underlying disagreement",
         "DECISION SPLIT (AWAITING USER INPUT)",
@@ -310,6 +316,8 @@ def validate_orchestrators(errors: list[str]) -> None:
         "Use the embedded lens registry in this skill.",
         "use the embedded lens brief in this skill",
         "Embedded Lens Registry And Briefs",
+        "docs/polylens/pre-fight/",
+        "YYMMDD_slug_rN.md",
         "Select at most 3 disagreements total across the whole review",
         "Default to `interactive` mode",
         "AUTOMATIC ARBITRATION",
@@ -321,6 +329,20 @@ def validate_orchestrators(errors: list[str]) -> None:
         require(
             required_text in pre_fight_text,
             f"{PRE_FIGHT_PATH.relative_to(ROOT)}: missing '{required_text}'",
+            errors,
+        )
+
+    for required_path in [
+        ROOT / "docs" / "polylens" / "README.md",
+        ROOT / "docs" / "polylens" / "memory",
+        ROOT / "docs" / "polylens" / "notes",
+        ROOT / "docs" / "polylens" / "plans",
+        ROOT / "docs" / "polylens" / "pre-fight",
+        ROOT / "docs" / "polylens" / "reviews",
+    ]:
+        require(
+            required_path.exists(),
+            f"missing docs artifact path: {required_path.relative_to(ROOT)}",
             errors,
         )
 

@@ -10,6 +10,8 @@ Each lens entry contains:
 - **focus:** One-line description
 - **domains:** Areas of expertise (used for keyword matching)
 - **triggers:** Keywords/phrases that activate the lens
+- **owns_decisions:** Decision categories this lens should usually be selected for first
+- **veto_on:** Decision categories where this lens must be included or explicitly deferred
 - **pairs_with:** Lenses that naturally complement this one
 - **default:** Part of fallback trio
 - **active:** Whether this lens is ready for selection (true) or planned for future (false)
@@ -23,6 +25,8 @@ Each lens entry contains:
 - **focus:** Speed, growth, market direction, and competitive advantage
 - **domains:** business, strategy, market, growth, revenue, competition, pricing, go-to-market, roadmap
 - **triggers:** pricing strategy, go-to-market, roadmap prioritization, resource allocation, market direction, competitive positioning, business model, monetization, growth metrics
+- **owns_decisions:** company direction, market positioning, strategic pricing posture, major bets, prioritization
+- **veto_on:** existential strategy shifts, irreversible bets, market-window decisions
 - **pairs_with:** CTO, CPO, YC, CFO, COO, CBDO, CHRO, CRO
 - **default:** true
 - **active:** true
@@ -34,6 +38,8 @@ Each lens entry contains:
 - **focus:** Scalability, risk, system integrity, and engineering excellence
 - **domains:** architecture, infrastructure, scalability, tech-debt, engineering, performance, reliability
 - **triggers:** tech stack, API design, database choice, deployment strategy, refactoring, system architecture, microservices, scalability, performance optimization, technical debt
+- **owns_decisions:** tech stack, architecture, platform design, reliability model, technical build-vs-buy
+- **veto_on:** unmaintainable architecture, unsafe scalability assumptions, irreversible technical debt
 - **pairs_with:** CIO, CISO, CDO
 - **default:** true
 - **active:** true
@@ -45,6 +51,8 @@ Each lens entry contains:
 - **focus:** User value, UX, retention, and product-market fit
 - **domains:** product, ux, user-research, feature-design, retention, engagement, product-market-fit
 - **triggers:** user experience, feature prioritization, user flow, onboarding, engagement metrics, retention, product-market fit, user research, usability
+- **owns_decisions:** feature scope, packaging, onboarding, product tiers, product-market-fit validation
+- **veto_on:** user-value dilution, unusable experience, wrong-problem decisions
 - **pairs_with:** CXO, CEO, CCO
 - **default:** true
 - **active:** true
@@ -56,6 +64,8 @@ Each lens entry contains:
 - **focus:** Clarity, fundability, simplicity, and traction
 - **domains:** startup, fundraising, mvp, product-market-fit, metrics, investor-readiness, growth
 - **triggers:** pitch deck, investor meeting, fundraising, MVP scope, growth metrics, product-market fit, traction, unit economics, burn rate
+- **owns_decisions:** MVP scope, fundraising framing, startup narrative, early-stage focus
+- **veto_on:** unfundable complexity, overbuilt early-stage scope
 - **pairs_with:** CEO, CPO
 - **default:** false
 - **active:** true
@@ -67,6 +77,8 @@ Each lens entry contains:
 - **focus:** Operational efficiency, internal systems, and workflow automation
 - **domains:** operations, internal-systems, data-flow, tooling, process, workflow, automation
 - **triggers:** workflow automation, internal tools, system integration, process redesign, operational efficiency, data pipeline, tooling choice
+- **owns_decisions:** internal systems, workflow automation, tooling integration, process tooling
+- **veto_on:** core workflow breakage, internal-system sprawl
 - **pairs_with:** CTO, CDO, COO, CHRO
 - **default:** false
 - **active:** true
@@ -78,6 +90,8 @@ Each lens entry contains:
 - **focus:** AI strategy, AI implementation, AI ethics, AI governance, AI literacy, and AI ROI
 - **domains:** ai-strategy, machine-learning, llm, ai-ethics, ai-governance, model-deployment, ai-training, ai-roi, generative-ai, responsible-ai, ai-compliance, ai-literacy
 - **triggers:** AI strategy, machine learning, LLM integration, AI ethics, AI governance, model deployment, AI training, AI ROI, automation with AI, generative AI, AI compliance, responsible AI, AI bias, prompt engineering, model monitoring
+- **owns_decisions:** AI adoption, model use, AI governance, responsible AI controls
+- **veto_on:** irresponsible AI, missing AI governance, unmeasured AI ROI
 - **pairs_with:** CTO, CDO, CISO, CEO
 - **default:** false
 - **active:** true
@@ -89,6 +103,8 @@ Each lens entry contains:
 - **focus:** Data strategy, analytics, and measurable decision-making
 - **domains:** data, analytics, ml, metrics, data-quality, data-strategy, business-intelligence
 - **triggers:** data pipeline, analytics dashboard, ML model, data strategy, metrics design, data quality, business intelligence, data governance
+- **owns_decisions:** metrics design, instrumentation, analytics strategy, data products, data governance
+- **veto_on:** unmeasurable decisions, data debt, broken instrumentation
 - **pairs_with:** CTO, CIO, CAIO
 - **default:** false
 - **active:** true
@@ -100,6 +116,8 @@ Each lens entry contains:
 - **focus:** Security posture, compliance, and risk management
 - **domains:** security, compliance, risk, access-control, data-protection, privacy, audit
 - **triggers:** authentication, authorization, encryption, GDPR, SOC2, vulnerability assessment, security audit, compliance requirement, data breach, access control, penetration testing
+- **owns_decisions:** security architecture, auth controls, compliance posture, privacy controls
+- **veto_on:** material security exposure, compliance failures, privacy breaches
 - **pairs_with:** CTO, CIO, CDO, CAIO
 - **default:** false
 - **active:** true
@@ -111,6 +129,8 @@ Each lens entry contains:
 - **focus:** Customer satisfaction, UI/UX design quality, support, and journey optimization
 - **domains:** customer-experience, ui-design, ux, accessibility, design-system, support, satisfaction, feedback, customer-journey, onboarding, visual-design, interaction-design
 - **triggers:** customer journey, UI design, UX review, support flow, NPS score, customer satisfaction, feedback loop, onboarding experience, customer retention, churn reduction, visual design, accessibility, design system, wireframe, mockup
+- **owns_decisions:** interface quality, interaction design, accessibility, journey polish
+- **veto_on:** severe customer friction, accessibility regressions, degraded interface trust
 - **pairs_with:** CPO
 - **default:** false
 - **active:** true
@@ -122,6 +142,8 @@ Each lens entry contains:
 - **focus:** Organizational agility, delivery effectiveness, team health, and continuous improvement
 - **domains:** agile, delivery, sprint, scrum, kanban, team-health, ways-of-working, flow-efficiency, impediment-removal, continuous-improvement
 - **triggers:** agile transformation, sprint planning, sprint review, retrospective, team velocity, delivery process, agile coaching, impediment removal, ways of working, sustainable pace, flow efficiency
+- **owns_decisions:** delivery model, team cadence, ways of working, flow efficiency
+- **veto_on:** unsustainable pace, brittle delivery systems, process overload
 - **pairs_with:** COO, CTO, CPO, CIO
 - **default:** false
 - **active:** true
@@ -133,6 +155,8 @@ Each lens entry contains:
 - **focus:** Operational scaling, supply chain resilience, process optimization, and vendor management
 - **domains:** operations, supply-chain, logistics, process-optimization, vendor-management, capacity-planning, quality-assurance, business-continuity
 - **triggers:** operational efficiency, supply chain, logistics, process redesign, vendor management, operational scaling, capacity planning, quality assurance, business continuity, incident response
+- **owns_decisions:** operating model, vendor process design, capacity planning, operational scale
+- **veto_on:** operational bottlenecks, continuity risk, fragile execution paths
 - **pairs_with:** CIO, CEO, CFO, CAgO
 - **default:** false
 - **active:** true
@@ -144,6 +168,8 @@ Each lens entry contains:
 - **focus:** Brand strategy, customer acquisition, marketing ROI, and growth marketing
 - **domains:** marketing, brand, acquisition, content-strategy, growth-marketing, seo, paid-advertising, social-media, market-positioning
 - **triggers:** marketing campaign, brand strategy, customer acquisition, content marketing, SEO strategy, social media, paid advertising, brand positioning, growth marketing, marketing budget, go-to-market messaging
+- **owns_decisions:** acquisition messaging, channel mix, launch campaigns, brand positioning
+- **veto_on:** incoherent GTM messaging, unmeasurable acquisition spend, weak brand positioning
 - **pairs_with:** CEO, CXO, CBDO
 - **default:** false
 - **active:** true
@@ -155,6 +181,8 @@ Each lens entry contains:
 - **focus:** Strategic partnerships, channel strategy, revenue diversification, and market expansion
 - **domains:** partnerships, alliances, channel-strategy, revenue-diversification, market-expansion, joint-ventures, distribution, co-marketing
 - **triggers:** partnership agreement, strategic alliance, channel strategy, revenue diversification, market expansion, joint venture, distribution deal, co-marketing, reseller agreement, platform integration partnership
+- **owns_decisions:** partner strategy, channel strategy, alliances, distribution expansion
+- **veto_on:** channel conflict, misaligned partner incentives, fragile alliance structure
 - **pairs_with:** CEO, CMO, CFO
 - **default:** false
 - **active:** true
@@ -166,6 +194,8 @@ Each lens entry contains:
 - **focus:** Financial sustainability, budget allocation, capital efficiency, and profitability
 - **domains:** finance, budget, cost, revenue, profitability, unit-economics, financial-planning, capital-structure, fundraising
 - **triggers:** budget allocation, cost analysis, pricing strategy, profitability analysis, burn rate, unit economics, financial modeling, ROI, cost optimization, fundraising, capital raise, financial planning
+- **owns_decisions:** budget, capital allocation, pricing economics, ROI model, runway management
+- **veto_on:** runway-threatening spend, broken unit economics, unsustainable margin structure
 - **pairs_with:** CEO, COO, CBDO, CRO
 - **default:** false
 - **active:** true
@@ -177,6 +207,8 @@ Each lens entry contains:
 - **focus:** Talent strategy, organizational culture, employee experience, workforce planning, and leadership development
 - **domains:** hr, talent, culture, employee-experience, workforce-planning, compensation, leadership-development, diversity-inclusion, employee-engagement, retention, performance-management, organizational-design
 - **triggers:** hiring strategy, employee retention, organizational culture, compensation review, performance management, leadership development, workforce planning, diversity and inclusion, employee engagement, talent acquisition, HR policy, onboarding experience, succession planning, employer brand
+- **owns_decisions:** org design, hiring strategy, compensation, performance systems, leadership development
+- **veto_on:** critical talent risk, culture damage, unstaffable plans
 - **pairs_with:** CEO, CAgO, COO
 - **default:** false
 - **active:** true
@@ -187,7 +219,9 @@ Each lens entry contains:
 
 - **focus:** Revenue strategy, sales execution, pipeline management, pricing optimization, and GTM alignment
 - **domains:** revenue, sales, pipeline, pricing, gtm, quota, territory, sales-enablement, revenue-operations, customer-acquisition, expansion-revenue, win-rate, deal-velocity
-- **triggers:** revenue targets, sales strategy, pipeline management, pricing optimization, quota setting, territory design, sales compensation, revenue operations, GTM execution, deal velocity, win rate, sales enablement, forecast accuracy, CAC, LTV
+- **triggers:** pricing, product pricing, pricing optimization, pricing model, pricing tiers, packaging, discounting, monetization, revenue targets, sales strategy, pipeline management, quota setting, territory design, sales compensation, revenue operations, GTM execution, deal velocity, win rate, sales enablement, forecast accuracy, CAC, LTV
+- **owns_decisions:** pricing, packaging, sales motion, revenue operations, monetization execution, GTM design
+- **veto_on:** pricing integrity, GTM infeasibility, damaged revenue predictability
 - **pairs_with:** CEO, CFO, CMO, CBDO, CCO
 - **default:** false
 - **active:** true
@@ -199,6 +233,8 @@ Each lens entry contains:
 - **focus:** Legal risk, regulatory compliance, corporate governance, contract integrity, and IP protection
 - **domains:** legal, compliance, governance, contracts, intellectual-property, litigation, data-privacy, employment-law, regulatory, corporate-policy, ethics, risk-management
 - **triggers:** contract review, regulatory compliance, corporate governance, intellectual property, litigation risk, data privacy law, terms of service, corporate policy, legal risk assessment, compliance audit, regulatory change, IP protection, employment law, fiduciary duty
+- **owns_decisions:** contracts, legal structure, regulatory posture, IP terms, governance controls
+- **veto_on:** legal exposure, unenforceable terms, regulatory breach
 - **pairs_with:** CISO, CCO, CFO, CEO
 - **default:** false
 - **active:** true
@@ -210,6 +246,8 @@ Each lens entry contains:
 - **focus:** Customer journey, retention, satisfaction, customer success, support quality, and advocacy
 - **domains:** customer-journey, retention, satisfaction, customer-success, support, nps, csat, churn, onboarding, customer-advocacy, customer-lifecycle, voice-of-customer, customer-health
 - **triggers:** customer journey, customer retention, churn reduction, NPS score, customer satisfaction, CSAT, customer success, support experience, onboarding experience, customer advocacy, customer lifecycle, voice of customer, renewal management, customer health score, time-to-value
+- **owns_decisions:** customer lifecycle, onboarding motion, support model, renewals, retention programs
+- **veto_on:** churn risk, trust erosion, unsupported customer-success load
 - **pairs_with:** CPO, CRO, CXO, CEO
 - **default:** false
 - **active:** true
@@ -220,17 +258,20 @@ Each lens entry contains:
 
 1. **Filter active lenses:** Only consider lenses where `active: true`
 2. **Identify the decision anchor:** Separate the primary decision being asked from supporting constraints. The primary decision should drive the first lens selection.
-3. **Score explicit wording:** Exact or near-exact matches against `triggers` score +2; domain/theme matches score +1
-4. **Downweight ambient constraints:** Budget, timeline, team size, compliance, or risk details count as supporting signals unless the user explicitly asks to optimize for them or they are central to the decision itself
-5. **Rank by relevance:** Sum the scores and keep a note of which user constraints each lens covers, but prefer lenses that match the decision anchor over lenses that only match surrounding constraints
-6. **Apply pairing rules:** If a top lens has `pairs_with` recommendations, boost those lenses' scores by 0.5 (only if they are also active)
-7. **Promote strategic complement when needed:** If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, this usually means pairing CTO with CEO.
-8. **Prefer coverage without drift:** Select 2-4 lenses that cover the prompt's main decision and its highest-consequence tradeoffs rather than stacking near-duplicates or adding weakly related oversight lenses
-9. **Cap secondary lenses:** After the anchor lens and any necessary strategy complement, add supporting lenses only when they introduce a distinct decision axis with explicit evidence. Do not add finance, security, or operations lenses solely because those concerns exist in the background.
-10. **Break ties deterministically:** Use this order: stronger decision-anchor match, stronger trigger match, more direct user wording match, `default: true`, registry order
-11. **Fallback:** If no strong matches (all scores < 2), use lenses marked `default: true`
+3. **Promote decision owners first:** If the anchor matches a lens's `owns_decisions`, that lens should usually be selected before adjacent lenses that only evaluate consequences of the decision.
+4. **Score explicit wording:** Exact or near-exact matches against `triggers` score +2; domain/theme matches score +1
+5. **Downweight ambient constraints:** Budget, timeline, team size, compliance, or risk details count as supporting signals unless the user explicitly asks to optimize for them or they are central to the decision itself
+6. **Apply veto coverage:** If the prompt explicitly touches a lens's `veto_on` area, include that lens or state why it is being deferred.
+7. **Rank by relevance:** Sum the scores and keep a note of which user constraints each lens covers, but never let an adjacent lens displace the primary owner of the decision anchor.
+8. **Apply pairing rules:** If a top lens has `pairs_with` recommendations, boost those lenses' scores by 0.5 (only if they are also active)
+9. **Promote strategic complement when needed:** If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, this usually means pairing CTO with CEO.
+10. **Prefer coverage without drift:** Select 2-4 lenses that cover the prompt's main decision and its highest-consequence tradeoffs rather than stacking near-duplicates or adding weakly related oversight lenses
+11. **Cap secondary lenses:** After the anchor lens, its owner, and any necessary strategy complement, add supporting lenses only when they introduce a distinct decision axis with explicit evidence. Do not add finance, security, or operations lenses solely because those concerns exist in the background.
+12. **Break ties deterministically:** Use this order: stronger ownership match, stronger decision-anchor match, stronger trigger match, more direct user wording match, `default: true`, registry order
+13. **Fallback:** If no strong matches (all scores < 2), use lenses marked `default: true`
 
 Example guidance:
 - If the user asks about "tech stack," anchor on CTO first and usually include CEO because stack choice shapes speed, leverage, and company direction.
+- If the user asks about "product pricing," include CRO by default because pricing is a revenue-system decision. Add CEO for strategic posture, CFO for margin/runway exposure, CPO for packaging or tiering questions, and YC only when startup simplicity or fundraising framing is explicit.
 - Add CISO only when security/compliance is an explicit decision axis, not just a generic best practice.
 - Add CFO only when spend/runway/ROI is itself being decided, not merely because cost always matters.

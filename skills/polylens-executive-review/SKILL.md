@@ -25,14 +25,19 @@ Read the bundled lens registry at `../shared/prompts/lens-registry.md`.
 **If no lenses specified:** Run the selection algorithm:
 1. Filter active lenses: Only consider lenses where `active: true`
 2. Identify the primary decision anchor and separate it from supporting constraints such as budget, timeline, team size, compliance, or risk
-3. Score explicit trigger phrase matches at +2 and domain/theme matches at +1
-4. Downweight supporting constraints unless the user explicitly asks to optimize for them or they are central to the decision itself
-5. Boost scores for lenses in `pairs_with` of top-scoring lenses (+0.5, only if active)
-6. If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, usually include CEO with CTO.
-7. Prefer a balanced set of 2-4 lenses that covers the anchor decision and only the highest-consequence secondary tradeoffs present in the prompt
-8. Do not add finance, security, or operations lenses solely because those concerns exist in the background; require explicit evidence that they are decision-driving
-9. Break ties deterministically in this order: decision-anchor match, explicit user wording match, trigger score, `default: true`, registry order
-10. If the prompt is ambiguous and no lens scores above 2, use the default lenses marked in the registry
+3. Check which lens role owns that decision class in the registry. Owner lenses should be selected before adjacent lenses that only judge consequences of the decision.
+4. Score explicit trigger phrase matches at +2 and domain/theme matches at +1
+5. Downweight supporting constraints unless the user explicitly asks to optimize for them or they are central to the decision itself
+6. If the prompt explicitly touches a veto area for a lens, include that lens or explain why it is being deferred
+7. Boost scores for lenses in `pairs_with` of top-scoring lenses (+0.5, only if active)
+8. If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, usually include CEO with CTO.
+9. Never let YC, CFO, or other adjacent lenses displace the primary owner of the decision anchor when that owner is active and clearly applicable
+10. Prefer a balanced set of 2-4 lenses that covers the anchor decision and only the highest-consequence secondary tradeoffs present in the prompt
+11. Do not add finance, security, or operations lenses solely because those concerns exist in the background; require explicit evidence that they are decision-driving
+12. Break ties deterministically in this order: ownership match, decision-anchor match, explicit user wording match, trigger score, `default: true`, registry order
+13. If the prompt is ambiguous and no lens scores above 2, use the default lenses marked in the registry
+
+Pricing guidance: for pricing, packaging, monetization, or sales-motion decisions, include CRO by default. Add CEO for strategic posture, CFO for unit economics or runway, CPO for packaging or product tier design, and YC only when startup simplicity or fundraising framing is explicitly part of the question.
 
 Announce which lenses were selected and why.
 
@@ -77,6 +82,13 @@ Produce the decision brief following the template in `../shared/prompts/output-t
 4. Final Alignment After Resolution, or `DECISION SPLIT (AWAITING USER INPUT)` when Type 5 remains open
 5. Final Summary Dashboard only when the final alignment is complete
 
+If the user asks to save, export, write, or generate the brief as a markdown file:
+- Store it under `docs/polylens/reviews/`
+- Use the filename format `YYMMDD_slug_rN.md` (example: `260405_mongodb-migration_r1.md`)
+- Use a descriptive slug that can be understood without opening the file; avoid vague names like `notes` or `fix`
+- Start with `r1` for the first saved version of that slug on that date, then increment to `r2`, `r3`, and so on for revisions
+- If the user asks for a general markdown memo rather than a review brief, use the nearest matching docs subdirectory under `docs/polylens/`; default to `docs/polylens/memory/` when no better category is clear
+
 ## Error Handling
 
 - **Problem too vague:** Ask clarifying questions before running lenses
@@ -93,6 +105,7 @@ Produce the decision brief following the template in `../shared/prompts/output-t
 - Always read `../shared/engines/collision.md` before detecting conflicts
 - Always read `../shared/engines/synthesis.md` before synthesizing
 - Always read `../shared/prompts/output-template.md` before formatting output
+- When the user asks for a markdown artifact file, save it under `docs/polylens/<category>/YYMMDD_slug_rN.md` instead of creating loose markdown files at the repo root
 - Never skip the collision step even if lenses mostly agree
 - Never auto-resolve Type 5 (Fundamental) conflicts — escalate to user
 - If a user decision is still needed, stop after the partial brief and wait for input
