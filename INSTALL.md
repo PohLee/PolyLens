@@ -43,7 +43,49 @@ For GitHub Copilot in VS Code, prefer workspace installation instead of a user-g
 
 ## Install Rules
 
+### Rule 0: OpenCode Uses A Dedicated Installer
+
+OpenCode does not reliably resolve PolyLens runtime reads through sibling traversal such as `../shared/...`. A direct install of `skills/polylens`, `skills/polylens-lens-review`, and `skills/shared` into `~/.config/opencode/skills` can leave the public skills unable to find their orchestrators.
+
+If the target agent is OpenCode, do this instead:
+
+```bash
+bash tools/install_opencode.sh
+```
+
+Optional explicit target path:
+
+```bash
+bash tools/install_opencode.sh ~/.config/opencode/skills
+```
+
+The installer builds `dist/opencode-polylens/` and installs self-contained `polylens/` and `polylens-lens-review/` skill directories with nested `shared/` runtime assets, so OpenCode never needs to traverse outside the active skill directory.
+
+### Rule 0.5: Common Agent Installers
+
+PolyLens also ships explicit installers for the common sibling-layout agents:
+
+- Claude Code: `bash tools/install_claude_code.sh`
+- Codex: `bash tools/install_codex.sh`
+- GitHub Copilot workspace install: `bash tools/install_copilot_workspace.sh /path/to/workspace`
+
+These scripts build `dist/standard-polylens/` and install the standard sibling bundle:
+
+- `polylens/`
+- `polylens-lens-review/`
+- `shared/`
+
+If you need a custom target path, pass it as the first argument:
+
+```bash
+bash tools/install_claude_code.sh ~/.claude/skills
+bash tools/install_codex.sh ~/.codex/skills
+bash tools/install_copilot_workspace.sh /path/to/workspace
+```
+
 ### Rule 1: Preserve Sibling Layout
+
+For Claude Code, Codex, RooCode, Copilot workspace installs, and other agents that correctly resolve sibling-relative paths, the final target skills location must contain these sibling directories:
 
 The final target skills location must contain these sibling directories:
 
@@ -77,12 +119,17 @@ New-Item -ItemType Junction -Path "<skills-root>\shared" -Target "<repo>\skills\
 
 If symlinks are blocked, copy the three directories instead.
 
+Do not use this direct-sibling install method for OpenCode. Use `bash tools/install_opencode.sh` instead.
+
+If you want a deterministic copied bundle instead of manual symlinks for Claude Code, Codex, RooCode, or Copilot workspace installs, prefer the installer scripts above.
+
 ### Rule 3: Copilot Workspace Install
 
 For GitHub Copilot in VS Code, use one of these approaches:
 
-1. Add `./skills` to the workspace `chat.skillsLocations` setting.
-2. Or place the three sibling directories into `.github/skills/` or `.claude/skills/` inside the target workspace.
+1. Run `bash tools/install_copilot_workspace.sh /path/to/workspace` to copy the bundle into `.github/skills/`.
+2. Or add `./skills` to the workspace `chat.skillsLocations` setting.
+3. Or place the three sibling directories into `.github/skills/` or `.claude/skills/` inside the target workspace.
 
 Do not treat the whole repository root as a skills directory.
 
@@ -90,9 +137,10 @@ Do not treat the whole repository root as a skills directory.
 
 After installation:
 
-1. Confirm the target location contains `polylens`, `polylens-lens-review`, and `shared`.
-2. Confirm the public skills can still resolve `../shared/...` paths.
-3. Ask the agent or user-facing environment what skills are available, if that environment supports it.
+1. For OpenCode installs, confirm the target location contains `polylens/shared/` and `polylens-lens-review/shared/`.
+2. For other agents, confirm the target location contains `polylens`, `polylens-lens-review`, and `shared` as siblings.
+3. Confirm the public skills can resolve their runtime markdown dependencies.
+4. Ask the agent or user-facing environment what skills are available, if that environment supports it.
 
 ## Suggested Completion Message
 
