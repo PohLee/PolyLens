@@ -94,6 +94,12 @@ When a user asks PolyLens to generate and save a markdown file, store it under `
 - Use `docs/polylens/memory/` for memory notes, working notes, and generic markdown memos when no better category is clear
 - Use `docs/polylens/notes/` for other supporting notes
 
+When storing project-specific memory, separate it into:
+
+- `project-context` for durable facts such as mission, vision, strategic posture, constraints, and non-negotiables
+- `project-preferences` for recurring defaults about how PolyLens should run reviews in that project
+- `decision-history` for prior decisions and rationale that future reviews should respect
+
 Filename convention:
 
 - `YYMMDD_slug_rN.md`

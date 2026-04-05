@@ -7,6 +7,7 @@ For the full product overview, installation, usage, architecture, lens model, an
 ## What Lives Here
 
 - [../README.md](../README.md): canonical project documentation
+- [project-memory-model.md](project-memory-model.md): project-specific memory schema for durable context, preferences, and decision history
 - [polylens/README.md](polylens/README.md): canonical markdown artifact storage rules
 - [polylens/reviews/](polylens/reviews/): saved executive review briefs
 - [polylens/pre-fight/](polylens/pre-fight/): saved pre-fight reports
@@ -17,14 +18,16 @@ For the full product overview, installation, usage, architecture, lens model, an
 ## Reading Order
 
 1. Read [../README.md](../README.md) for the full PolyLens model and runtime structure.
-2. Read [polylens/README.md](polylens/README.md) for save-path and filename conventions.
-3. Use the subdirectories under [polylens/](polylens/) for generated artifacts only.
+2. Read [project-memory-model.md](project-memory-model.md) for project-specific memory classes and update rules.
+3. Read [polylens/README.md](polylens/README.md) for save-path and filename conventions.
+4. Use the subdirectories under [polylens/](polylens/) for generated artifacts only.
 
 ## Notes
 
 - The source docs remain at the repo root under `README.md`, `prompts/`, `engines/`, `lenses/`, and `orchestrators/`.
 - The runtime bundle remains under `skills/shared/`; those mirrored files are intentional and should stay in sync with the source docs.
 - Do not create loose markdown artifacts at the repo root when a `docs/polylens/` category fits.
+- Project-scoped memory should be split into context, preferences, and decision history rather than mixed into a single undifferentiated memo.
 
 ## Contributing
 

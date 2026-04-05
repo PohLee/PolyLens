@@ -13,6 +13,12 @@ For the docs index, see [../README.md](../README.md).
 - Store generic markdown memos, working notes, and memory-style outputs in `docs/polylens/memory/`
 - Store other supporting notes in `docs/polylens/notes/`
 
+Recommended project-memory references inside `docs/polylens/memory/`:
+
+- `project-context`: durable facts about the company, product, mission, vision, constraints, and non-negotiables
+- `project-preferences`: default PolyLens behavior for that project such as lens defaults, checklist defaults, and template preferences
+- `decision-history`: durable prior decisions, rationale, and revisit triggers
+
 ## Filename Rule
 
 - Use `YYMMDD_slug_rN.md`
