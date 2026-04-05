@@ -18,7 +18,7 @@ Read the problem/plan being reviewed. Identify:
 
 ### Step 1: Select Lenses
 
-Read the lens registry at `prompts/lens-registry.md`.
+Read the bundled lens registry at `../shared/prompts/lens-registry.md`.
 
 **If the user specified lenses:** Use those lenses. Respect explicit user choice.
 
@@ -38,30 +38,30 @@ Announce which lenses were selected and why.
 
 ### Step 2: Run Each Lens
 
-For each selected lens, read the corresponding `skills/lens-<name>/SKILL.md` file and follow its review process.
+For each selected lens, read the corresponding sibling skill at `../lens-<name>/SKILL.md` and follow its review process.
 
 Run lenses sequentially to preserve context. For each lens:
 1. Apply the lens's philosophy, directives, and cognitive patterns
-2. Optionally use tools from `prompts/lens-capabilities.md` if it would strengthen the analysis
+2. Optionally use tools from `../shared/prompts/lens-capabilities.md` if it would strengthen the analysis
 3. Produce the lens position in the required format (between `---BEGIN <LENS> POSITION---` and `---END <LENS> POSITION---` delimiters)
 4. Include the structured decision-framing block so Scope, Timeline, Resource, Risk, Success Criteria, and Assumptions / Unknowns are explicit
 5. Provide concise reasoning paragraphs
 
 ### Step 3: Collision Detection
 
-Run the collision engine by reading `engines/collision.md` and following its process:
+Run the collision engine by reading `../shared/engines/collision.md` and following its process:
 1. Collect all lens verdicts
 2. Determine alignment status (UNANIMOUS / SPLIT / ALL DISAGREE)
 3. Build the conflict map from the structured decision-framing fields (Scope, Timeline, Resource, Risk, Success Criteria)
 4. Deduplicate conflicts that describe the same underlying disagreement
 5. Classify each canonical conflict by type (Priority, Scope, Risk, Resource, Fundamental)
-6. Reference `prompts/conflict-types.md` for type definitions
+6. Reference `../shared/prompts/conflict-types.md` for type definitions
 
 Output the Conflict Detection Summary.
 
 ### Step 4: Synthesis
 
-Run the synthesis engine by reading `engines/synthesis.md` and following its process:
+Run the synthesis engine by reading `../shared/engines/synthesis.md` and following its process:
 1. Apply resolution strategies based on conflict type
 2. For Type 5 (Fundamental) conflicts, output the decision split format and stop for user input
 3. Assemble the Final Alignment section only when no user decision is pending
@@ -69,7 +69,7 @@ Run the synthesis engine by reading `engines/synthesis.md` and following its pro
 
 ### Step 5: Output Decision Brief
 
-Produce the decision brief following the template in `prompts/output-template.md`:
+Produce the decision brief following the template in `../shared/prompts/output-template.md`:
 
 1. Individual Lens Positions
 2. Conflict Detection Summary
@@ -88,11 +88,11 @@ Produce the decision brief following the template in `prompts/output-template.md
 
 ## Important Rules
 
-- Always read `prompts/lens-registry.md` before selecting lenses
-- Always read each lens's skill file before running it
-- Always read `engines/collision.md` before detecting conflicts
-- Always read `engines/synthesis.md` before synthesizing
-- Always read `prompts/output-template.md` before formatting output
+- Always read `../shared/prompts/lens-registry.md` before selecting lenses
+- Always read each lens's sibling skill file before running it
+- Always read `../shared/engines/collision.md` before detecting conflicts
+- Always read `../shared/engines/synthesis.md` before synthesizing
+- Always read `../shared/prompts/output-template.md` before formatting output
 - Never skip the collision step even if lenses mostly agree
 - Never auto-resolve Type 5 (Fundamental) conflicts — escalate to user
 - If a user decision is still needed, stop after the partial brief and wait for input

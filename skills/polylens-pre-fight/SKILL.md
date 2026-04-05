@@ -26,7 +26,7 @@ Mode rules:
 
 ### Step 1: Select Lenses
 
-Read the lens registry at `prompts/lens-registry.md`.
+Use the embedded lens registry in this skill. Do not read external prompt files during pre-fight orchestration.
 
 **If the user specified lenses:** Use those lenses.
 
@@ -46,7 +46,7 @@ Read the lens registry at `prompts/lens-registry.md`.
 
 ### Step 2: Initial Positions
 
-For each selected lens, read its skill file (`skills/lens-<name>/SKILL.md`) and produce its initial position:
+For each selected lens, use the embedded lens brief in this skill and produce its initial position:
 - Verdict (GO/MODIFY/BLOCK)
 - Decision framing (Scope, Timeline, Resource, Risk, Success Criteria, Assumptions / Unknowns)
 - Key concerns
@@ -177,11 +177,57 @@ RECOMMENDED NEXT STEPS
 
 ## Important Rules
 
-- Always read `prompts/lens-registry.md` before selecting lenses
-- Always read each lens's skill file before running it
+- Always use the embedded lens registry before selecting lenses
+- Always use the embedded lens briefs before generating positions
 - Critique only the strongest disagreements; do not run all-to-all commentary
 - Cross-critique must be specific — no generic "this has risks" statements
 - Defense must address the actual critique, not deflect
 - In interactive mode, escalation must clearly state what the user needs to decide
 - In automatic mode, arbitration must clearly state why the winning option was selected
 - Keep the report compact; prioritize signal over completeness
+
+## Embedded Lens Registry And Briefs
+
+Use the lens metadata below for automatic selection and the lens briefs below for position generation. Do not read other PolyLens files during pre-fight orchestration.
+
+### Selection Metadata
+
+- CEO: focus business strategy, growth, pricing, roadmap. Triggers pricing strategy, go-to-market, roadmap prioritization, competitive positioning, monetization. Pairs with CTO, CPO, YC, CFO, COO, CBDO, CHRO, CRO. Default true. Bias action over perfection.
+- CTO: focus architecture, scalability, reliability, technical debt. Triggers tech stack, API design, database choice, deployment strategy, refactoring, system architecture, performance optimization. Pairs with CIO, CISO, CDO. Default true. Bias long-term stability over short-term speed.
+- CPO: focus product value, UX, retention, product-market fit. Triggers user experience, feature prioritization, onboarding, engagement, retention, usability. Pairs with CXO, CEO, CCO. Default true. Bias product quality over internal efficiency.
+- YC: focus startup clarity, simplicity, fundability, traction. Triggers fundraising, MVP scope, traction, unit economics, burn rate. Pairs with CEO, CPO. Bias signal over noise.
+- CIO: focus internal systems, automation, workflow efficiency. Triggers workflow automation, internal tools, system integration, process redesign, operational efficiency. Pairs with CTO, CDO, COO, CHRO. Bias efficiency over feature richness.
+- CAIO: focus AI strategy, governance, ethics, ROI. Triggers AI strategy, machine learning, LLM integration, AI governance, responsible AI, model monitoring. Pairs with CTO, CDO, CISO, CEO. Bias responsible AI over adoption speed.
+- CDO: focus data strategy, analytics, metrics, governance. Triggers data pipeline, analytics dashboard, ML model, metrics design, data quality. Pairs with CTO, CIO, CAIO. Bias data-driven decisions over intuition.
+- CISO: focus security, compliance, privacy, risk management. Triggers authentication, authorization, encryption, GDPR, SOC2, security audit, access control. Pairs with CTO, CIO, CDO, CAIO. Bias security over convenience.
+- CXO: focus customer experience, interface quality, accessibility, journey design. Triggers customer journey, UI design, support flow, NPS, onboarding experience, design system. Pairs with CPO. Bias customer satisfaction over internal convenience.
+- CAgO: focus delivery effectiveness, team health, sustainable pace. Triggers agile transformation, sprint planning, retrospectives, team velocity, flow efficiency. Pairs with COO, CTO, CPO, CIO. Bias sustainable delivery over ceremonial process.
+- COO: focus operational scale, supply chain, process resilience, vendor management. Triggers operational efficiency, logistics, process redesign, capacity planning, business continuity. Pairs with CIO, CEO, CFO, CAgO. Bias process efficiency over ad-hoc solutions.
+- CMO: focus marketing strategy, acquisition, brand, growth loops. Triggers marketing campaign, brand strategy, customer acquisition, SEO, paid advertising, GTM messaging. Pairs with CEO, CXO, CBDO. Bias measurable growth over brand awareness alone.
+- CBDO: focus partnerships, channels, alliances, market expansion. Triggers partnership agreement, strategic alliance, channel strategy, co-marketing, distribution deal. Pairs with CEO, CMO, CFO. Bias strategic leverage over raw revenue volume.
+- CFO: focus budget, profitability, capital efficiency, financial planning. Triggers budget allocation, pricing strategy, burn rate, unit economics, ROI, fundraising. Pairs with CEO, COO, CBDO, CRO. Bias financial sustainability over growth at all costs.
+- CHRO: focus talent, culture, workforce planning, leadership development. Triggers hiring strategy, retention, compensation, employee engagement, succession planning. Pairs with CEO, CAgO, COO. Bias people sustainability over short-term efficiency.
+- CRO: focus revenue strategy, sales execution, pricing optimization, GTM alignment. Triggers revenue targets, sales strategy, pipeline management, quota setting, CAC, LTV, forecast accuracy. Pairs with CEO, CFO, CMO, CBDO, CCO. Bias predictable revenue over heroic sales.
+- CLO: focus legal risk, contracts, governance, IP, regulatory compliance. Triggers contract review, regulatory compliance, terms of service, data privacy law, IP protection. Pairs with CISO, CCO, CFO, CEO. Bias legal compliance over business speed.
+- CCO: focus customer retention, support quality, success, advocacy. Triggers customer retention, churn reduction, CSAT, customer success, onboarding experience, renewal management. Pairs with CPO, CRO, CXO, CEO. Bias retention over acquisition speed.
+
+### Lens Briefs
+
+- CEO brief: Judge plans by market timing, leverage, focus, and competitive advantage. GO when it moves the business meaningfully and fast, MODIFY when speed or clarity is weak, BLOCK when it misses the market window.
+- CTO brief: Judge plans by maintainability, scalability, reliability, and irreversible technical debt. GO when the architecture is sound, MODIFY when guardrails or phasing are needed, BLOCK when the debt or fragility becomes unmanageable.
+- CPO brief: Judge plans by user value, usability, retention, and product coherence. GO when users will clearly benefit, MODIFY when the experience or problem framing is weak, BLOCK when it solves the wrong problem.
+- YC brief: Judge plans by clarity, simplicity, and fundable traction. GO when the story is crisp and focused, MODIFY when scope is noisy, BLOCK when the plan is too complex to validate quickly.
+- CIO brief: Judge plans by operational simplicity, workflow fit, and tooling burden. GO when operations get easier, MODIFY when complexity rises without enough payoff, BLOCK when it disrupts core workflows.
+- CAIO brief: Judge plans by AI value, governance, model risk, and ethical compliance. GO when AI use is measurable and responsible, MODIFY when governance or ROI is fuzzy, BLOCK when ethical or compliance risk is unacceptable.
+- CDO brief: Judge plans by measurement quality, analytics usefulness, and data debt. GO when outcomes are measurable, MODIFY when instrumentation or governance is weak, BLOCK when it creates data chaos.
+- CISO brief: Judge plans by secure defaults, privacy posture, and auditability. GO when secure by design, MODIFY when controls are incomplete, BLOCK when risk is unacceptable.
+- CXO brief: Judge plans by end-to-end customer experience, interface quality, and accessibility. GO when customers will notice real improvement, MODIFY when friction remains, BLOCK when the journey degrades.
+- CAgO brief: Judge plans by delivery flow, team ownership, and sustainability. GO when delivery gets healthier and faster, MODIFY when dependencies or process drag remain, BLOCK when it encourages brittle execution.
+- COO brief: Judge plans by repeatability, scalability, and operational resilience. GO when execution becomes smoother, MODIFY when process gaps remain, BLOCK when it adds bottlenecks or fragility.
+- CMO brief: Judge plans by acquisition efficiency, message clarity, and channel feedback loops. GO when growth is measurable, MODIFY when channel or message risk is unresolved, BLOCK when spend cannot be justified.
+- CBDO brief: Judge plans by partnership leverage, incentive alignment, and channel conflict. GO when the alliance creates asymmetric value, MODIFY when terms or integration are weak, BLOCK when incentives are misaligned.
+- CFO brief: Judge plans by cash efficiency, unit economics, and downside exposure. GO when financially sound, MODIFY when controls or ROI clarity are missing, BLOCK when the economics are unsustainable.
+- CHRO brief: Judge plans by cultural impact, retention risk, hiring load, and leadership quality. GO when people capacity and culture improve, MODIFY when change management is weak, BLOCK when it harms critical talent or trust.
+- CRO brief: Judge plans by pipeline quality, pricing integrity, forecastability, and expansion potential. GO when revenue becomes more predictable, MODIFY when GTM execution gaps remain, BLOCK when it damages pricing or customer fit.
+- CLO brief: Judge plans by legal soundness, contract integrity, governance, and regulatory exposure. GO when legally safe, MODIFY when guardrails are needed, BLOCK when legal or regulatory risk is unacceptable.
+- CCO brief: Judge plans by retention, support burden, time-to-value, and customer trust. GO when it improves ongoing customer outcomes, MODIFY when impact is mixed or unmanaged, BLOCK when it risks churn or trust erosion.

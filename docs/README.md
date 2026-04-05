@@ -19,6 +19,8 @@ ln -s "$(pwd)/skills" ~/.config/opencode/skills/polylens
 
 That's it. Every lens and orchestrator is now available as a skill.
 
+The installable `skills/` tree is self-contained. Runtime references stay inside that tree by using sibling-relative paths such as `../shared/prompts/...` and `../shared/engines/...`, so PolyLens can review another repository without extra directory permissions.
+
 ---
 
 ## Usage
@@ -109,6 +111,9 @@ polylens/
 ├── skills/                          # Skill definitions (invocable by OpenCode)
 │   ├── polylens-executive-review.md # Orchestrator: full review pipeline
 │   ├── polylens-pre-fight.md        # Orchestrator: adversarial critique
+│   ├── shared/                      # Bundled runtime docs used by installed skills
+│   │   ├── prompts/
+│   │   └── engines/
 │   ├── lens-ceo.md                  # Business & Strategy
 │   ├── lens-cto.md                  # Technical & Infrastructure
 │   ├── lens-cpo.md                  # Product & User Experience
@@ -129,6 +134,8 @@ polylens/
 └── docs/
     └── README.md                    # This file
 ```
+
+The root `prompts/` and `engines/` directories remain the source docs for development. Their runtime copies live under `skills/shared/` so installed agents only need access to the symlinked `skills/` tree.
 
 ### Three-Layer Design
 

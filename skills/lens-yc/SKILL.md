@@ -151,7 +151,7 @@ Read the problem/plan. Identify:
 
 ### Step 1.5: Research (Optional but Recommended)
 
-Read `prompts/lens-capabilities.md` for available tools and frameworks.
+Available tools when they materially improve judgment: web research, git history, file and code reads, shell commands, and frameworks such as SWOT, Porter's Five Forces, Jobs-to-be-Done, RICE, Kano, Cost of Delay, Technical Debt Quadrant, and DORA Metrics.
 
 Before forming your position, consider:
 - Is there market data or competitor funding info I should research? (use browser)

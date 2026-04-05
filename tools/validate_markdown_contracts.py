@@ -16,6 +16,9 @@ SYNTHESIS_PATH = ROOT / "engines" / "synthesis.md"
 EXEC_REVIEW_PATH = ROOT / "skills" / "polylens-executive-review" / "SKILL.md"
 PRE_FIGHT_PATH = ROOT / "skills" / "polylens-pre-fight" / "SKILL.md"
 SKILLS_DIR = ROOT / "skills"
+SHARED_DIR = SKILLS_DIR / "shared"
+BUNDLED_PROMPTS_DIR = SHARED_DIR / "prompts"
+BUNDLED_ENGINES_DIR = SHARED_DIR / "engines"
 
 
 LENS_REQUIRED_FIELDS = [
@@ -42,6 +45,14 @@ def read_text(path: Path) -> str:
 def require(condition: bool, message: str, errors: list[str]) -> None:
     if not condition:
         errors.append(message)
+
+
+def normalize_bundled_shared_refs(text: str) -> str:
+    return (
+        text.replace("../prompts/", "prompts/")
+        .replace("../shared/prompts/", "prompts/")
+        .replace("../shared/engines/", "engines/")
+    )
 
 
 def parse_registry(text: str) -> tuple[list[str], dict[str, dict[str, str]]]:
@@ -149,6 +160,61 @@ def validate_lens_skill(lens_name: str, errors: list[str]) -> None:
             errors,
         )
 
+    for required_text in [
+        "Available tools when they materially improve judgment:",
+    ]:
+        require(
+            required_text in text,
+            f"{skill_path.relative_to(ROOT)}: missing '{required_text}'",
+            errors,
+        )
+
+
+def validate_bundled_shared_docs(errors: list[str]) -> None:
+    bundled_paths = [
+        BUNDLED_PROMPTS_DIR / "lens-registry.md",
+        BUNDLED_PROMPTS_DIR / "lens-capabilities.md",
+        BUNDLED_PROMPTS_DIR / "conflict-types.md",
+        BUNDLED_PROMPTS_DIR / "output-template.md",
+        BUNDLED_ENGINES_DIR / "collision.md",
+        BUNDLED_ENGINES_DIR / "synthesis.md",
+    ]
+
+    for bundled_path in bundled_paths:
+        require(bundled_path.exists(), f"missing bundled shared file: {bundled_path.relative_to(ROOT)}", errors)
+
+    prompt_pairs = [
+        (REGISTRY_PATH, BUNDLED_PROMPTS_DIR / "lens-registry.md"),
+        (ROOT / "prompts" / "lens-capabilities.md", BUNDLED_PROMPTS_DIR / "lens-capabilities.md"),
+        (ROOT / "prompts" / "conflict-types.md", BUNDLED_PROMPTS_DIR / "conflict-types.md"),
+        (OUTPUT_TEMPLATE_PATH, BUNDLED_PROMPTS_DIR / "output-template.md"),
+    ]
+    for source_path, bundled_path in prompt_pairs:
+        if source_path.exists() and bundled_path.exists():
+            require(
+                read_text(source_path) == read_text(bundled_path),
+                (
+                    f"bundled prompt mismatch: {bundled_path.relative_to(ROOT)} must match "
+                    f"{source_path.relative_to(ROOT)}"
+                ),
+                errors,
+            )
+
+    engine_pairs = [
+        (COLLISION_PATH, BUNDLED_ENGINES_DIR / "collision.md"),
+        (SYNTHESIS_PATH, BUNDLED_ENGINES_DIR / "synthesis.md"),
+    ]
+    for source_path, bundled_path in engine_pairs:
+        if source_path.exists() and bundled_path.exists():
+            require(
+                read_text(source_path) == normalize_bundled_shared_refs(read_text(bundled_path)),
+                (
+                    f"bundled engine mismatch: {bundled_path.relative_to(ROOT)} must stay in sync with "
+                    f"{source_path.relative_to(ROOT)} aside from shared/ path prefixes"
+                ),
+                errors,
+            )
+
 
 def validate_skill_inventory(active_lenses: list[str], errors: list[str]) -> None:
     lens_dirs = sorted(
@@ -223,7 +289,11 @@ def validate_synthesis(errors: list[str]) -> None:
 def validate_orchestrators(errors: list[str]) -> None:
     exec_text = read_text(EXEC_REVIEW_PATH)
     for required_text in [
-        "skills/lens-<name>/SKILL.md",
+        "../shared/prompts/lens-registry.md",
+        "../lens-<name>/SKILL.md",
+        "../shared/engines/collision.md",
+        "../shared/engines/synthesis.md",
+        "../shared/prompts/output-template.md",
         "Break ties deterministically",
         "Deduplicate conflicts that describe the same underlying disagreement",
         "DECISION SPLIT (AWAITING USER INPUT)",
@@ -237,7 +307,9 @@ def validate_orchestrators(errors: list[str]) -> None:
 
     pre_fight_text = read_text(PRE_FIGHT_PATH)
     for required_text in [
-        "skills/lens-<name>/SKILL.md",
+        "Use the embedded lens registry in this skill.",
+        "use the embedded lens brief in this skill",
+        "Embedded Lens Registry And Briefs",
         "Select at most 3 disagreements total across the whole review",
         "Default to `interactive` mode",
         "AUTOMATIC ARBITRATION",
@@ -277,6 +349,7 @@ def main() -> int:
     for lens_name in active_lenses:
         validate_lens_skill(lens_name, errors)
     validate_output_template(errors)
+    validate_bundled_shared_docs(errors)
     validate_collision(errors)
     validate_synthesis(errors)
     validate_orchestrators(errors)

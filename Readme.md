@@ -39,6 +39,8 @@ cd polylens
 
 > **Tip:** After installation, verify skills are detected by asking your agent: *"What skills do you have available?"*
 
+The installable `skills/` tree is self-contained. Runtime references stay inside that tree by using sibling-relative paths such as `../shared/prompts/...` and `../shared/engines/...`, so PolyLens can review another repository without extra directory permissions.
+
 ---
 
 ## 🚀 Usage
@@ -74,6 +76,8 @@ Run fully automatic pre-fight review on our pricing strategy
 **Triggers:** *"pre-fight review"*, *"adversarial review"*, *"critique from all angles"*, *"stress-test this decision"*, *"debate"*, *"fully automatic pre-fight"*, *"auto-resolve disagreements"*, *"without user input"*
 
 Standard pre-fight stays interactive and stops when a fundamental split needs a user decision. Add language like *"fully automatic"*, *"decide for me"*, or *"without user input"* to force automatic arbitration and a completed recommendation.
+
+Pre-fight is self-contained at runtime: it uses the embedded registry and lens briefs inside the pre-fight skill instead of reading other PolyLens files after activation.
 
 ---
 
@@ -201,6 +205,9 @@ polylens/
 ├── skills/
 │   ├── polylens-executive-review.md  # Orchestrator: full pipeline
 │   ├── polylens-pre-fight.md         # Orchestrator: adversarial mode
+│   ├── shared/                       # Bundled runtime docs used by installed skills
+│   │   ├── prompts/
+│   │   └── engines/
 │   ├── lens-ceo/                     # Chief Executive Officer
 │   │   └── SKILL.md
 │   ├── lens-cto/                     # Chief Technology Officer
@@ -247,6 +254,8 @@ polylens/
 │   └── output-template.md            # 5-section decision brief format
 └── README.md                         # Project overview
 ```
+
+The root `prompts/` and `engines/` directories remain the source docs for development. Their runtime copies live under `skills/shared/` so installed agents only need access to the symlinked `skills/` tree.
 
 ### Lens Directory Structure
 
