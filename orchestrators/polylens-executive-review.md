@@ -16,6 +16,43 @@ Read the problem/plan being reviewed. Identify:
 - What is the context (codebase, branch, constraints)?
 - Are there specific lenses the user has requested?
 
+### Step 0.5: Harness Execution (if active)
+
+If the harness is active (detected in Step 2.5 of the router), follow these instructions:
+
+**Load Hook Content:**
+For each enabled hook in the registry, read the hook file from `../shared/hooks/<stage>/<name>.md`.
+Inject the hook's content (everything after the frontmatter) into the prompt at the appropriate stage.
+
+**Apply Reasoning Controls:**
+If `../shared/harness/reasoning.md` exists:
+- Set analysis depth per the config (surface/standard/deep)
+- Inject constraints into the prompt before lens selection
+- Apply output format settings
+
+**Execute Orchestration:**
+If `../shared/harness/orchestration.md` has multiple instances:
+- Run instances in the specified order (sequential mode)
+- For each instance, apply its specific lenses, hooks, and reasoning settings
+- Use previous instance output as context for dependent instances
+- Evaluate conditions before running conditional instances
+
+**Run Validation:**
+After producing the decision brief, if `../shared/harness/validation.md` has validation enabled:
+- Run contract check (verify all 5 sections present, verdicts formatted)
+- Run quality gate (score 0-10 based on depth, evidence, completeness)
+- Run consistency check (flag contradictory facts between lenses)
+- Append validation report to the brief
+
+**Hook Injection Format:**
+When injecting a hook's content, prefix it with:
+```
+## Active Hook: <name> (<stage>)
+<hook content>
+```
+
+This ensures the LLM knows which hook is being applied and at what stage.
+
 ### Step 1: Select Lenses
 
 Read the bundled lens registry at `../shared/prompts/lens-registry.md`.

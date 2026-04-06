@@ -25,6 +25,19 @@ Default to **standard review mode** unless the user clearly asks for adversarial
 
 Announce which mode was selected and why.
 
+### Step 2.5: Check for Harness Configuration
+
+Before executing the orchestrator, check for harness configuration:
+
+1. Check if `../shared/harness/orchestration.md` exists and has instances configured
+2. Check if `../shared/harness/reasoning.md` exists with non-default settings
+3. Check if `../shared/harness/validation.md` exists with validation enabled
+4. Check if `../shared/hooks/` directory has any enabled hooks
+
+If ANY of the above are true, the harness is active. Run `python3 ../shared/tools/harness.py run "problem"` to get the harness config JSON, then follow the harness execution flow defined in the orchestrator.
+
+If NONE are active, proceed to Step 3 with the standard flow.
+
 ### Step 3: Execute The Chosen Flow
 
 Run the selected internal orchestrator exactly as written.
@@ -35,3 +48,4 @@ Run the selected internal orchestrator exactly as written.
 - Do not improvise a hybrid between standard review and pre-fight.
 - If the user wants a single focused perspective rather than a multi-lens review, recommend `polylens-lens-review` instead.
 - Preserve all save/export behavior defined by the chosen internal orchestrator.
+- When harness is active, follow the harness execution flow from the orchestrator.

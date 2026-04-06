@@ -25,6 +25,12 @@ BUNDLED_PROMPTS_DIR = SHARED_DIR / "prompts"
 BUNDLED_ENGINES_DIR = SHARED_DIR / "engines"
 BUNDLED_LENSES_DIR = SHARED_DIR / "lenses"
 BUNDLED_ORCHESTRATORS_DIR = SHARED_DIR / "orchestrators"
+HOOKS_DIR = ROOT / "hooks"
+HARNESS_DIR = ROOT / "harness"
+BUNDLED_HOOKS_DIR = SHARED_DIR / "hooks"
+BUNDLED_HARNESS_DIR = SHARED_DIR / "harness"
+
+HOOK_STAGES = ["pre-analysis", "lens-select", "review", "collision", "synthesis", "post-analysis"]
 
 
 LENS_REQUIRED_FIELDS = [
@@ -460,6 +466,96 @@ def validate_orchestrators(errors: list[str]) -> None:
         )
 
 
+def validate_hook_frontmatter(hook_path: Path, errors: list[str]) -> None:
+    """Validate that a hook file has correct frontmatter."""
+    try:
+        text = hook_path.read_text(encoding="utf-8")
+    except Exception:
+        errors.append(f"Cannot read hook file: {hook_path.relative_to(ROOT)}")
+        return
+
+    if not text.startswith("---"):
+        errors.append(f"{hook_path.relative_to(ROOT)}: missing frontmatter")
+        return
+
+    required_fields = ["hook:", "name:", "order:", "enabled:", "type:"]
+    for field_name in required_fields:
+        if field_name not in text:
+            errors.append(f"{hook_path.relative_to(ROOT)}: missing field '{field_name.rstrip(':')}'")
+
+    # Validate hook stage matches directory
+    match = re.search(r"hook:\s*(\S+)", text)
+    if match:
+        stage = match.group(1)
+        parent_dir = hook_path.parent.name
+        if stage != parent_dir:
+            errors.append(f"{hook_path.relative_to(ROOT)}: hook stage '{stage}' doesn't match directory '{parent_dir}'")
+
+    # Validate type is markdown or script
+    match = re.search(r"type:\s*(\S+)", text)
+    if match:
+        hook_type = match.group(1)
+        if hook_type not in ("markdown", "script"):
+            errors.append(f"{hook_path.relative_to(ROOT)}: invalid type '{hook_type}', must be 'markdown' or 'script'")
+
+
+def validate_harness_config(config_path: Path, errors: list[str]) -> None:
+    """Validate that a harness config file has correct frontmatter."""
+    try:
+        text = config_path.read_text(encoding="utf-8")
+    except Exception:
+        errors.append(f"Cannot read harness config: {config_path.relative_to(ROOT)}")
+        return
+
+    if not text.startswith("---"):
+        errors.append(f"{config_path.relative_to(ROOT)}: missing frontmatter")
+        return
+
+
+def validate_hooks(errors: list[str]) -> None:
+    """Validate all hook files."""
+    if not HOOKS_DIR.exists():
+        return
+
+    for stage in HOOK_STAGES:
+        stage_dir = HOOKS_DIR / stage
+        if not stage_dir.exists():
+            continue
+        for hook_file in sorted(stage_dir.glob("*.md")):
+            validate_hook_frontmatter(hook_file, errors)
+
+    # Check bundled hooks match source hooks
+    if BUNDLED_HOOKS_DIR.exists():
+        for stage in HOOK_STAGES:
+            source_stage = HOOKS_DIR / stage
+            bundled_stage = BUNDLED_HOOKS_DIR / stage
+            if source_stage.exists() and bundled_stage.exists():
+                for source_file in sorted(source_stage.glob("*.md")):
+                    bundled_file = bundled_stage / source_file.name
+                    if not bundled_file.exists():
+                        errors.append(f"missing bundled hook: {bundled_file.relative_to(ROOT)}")
+                    elif read_text(source_file) != read_text(bundled_file):
+                        errors.append(f"bundled hook mismatch: {bundled_file.relative_to(ROOT)} must match {source_file.relative_to(ROOT)}")
+
+
+def validate_harness(errors: list[str]) -> None:
+    """Validate harness config files."""
+    if not HARNESS_DIR.exists():
+        return
+
+    for config_file in sorted(HARNESS_DIR.glob("*.md")):
+        validate_harness_config(config_file, errors)
+
+    # Check bundled harness configs match source
+    if BUNDLED_HARNESS_DIR.exists():
+        for source_file in sorted(HARNESS_DIR.glob("*.md")):
+            bundled_file = BUNDLED_HARNESS_DIR / source_file.name
+            if not bundled_file.exists():
+                errors.append(f"missing bundled harness config: {bundled_file.relative_to(ROOT)}")
+            elif read_text(source_file) != read_text(bundled_file):
+                errors.append(f"bundled harness mismatch: {bundled_file.relative_to(ROOT)} must match {source_file.relative_to(ROOT)}")
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -492,6 +588,8 @@ def main() -> int:
     validate_collision(errors)
     validate_synthesis(errors)
     validate_orchestrators(errors)
+    validate_hooks(errors)
+    validate_harness(errors)
 
     if errors:
         print("PolyLens markdown contract validation failed:\n", file=sys.stderr)

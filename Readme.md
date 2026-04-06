@@ -256,6 +256,134 @@ Run polylens pre-fight review on the launch plan and include a risk assessment
 
 ---
 
+## 🔌 Harness & Hooks
+
+PolyLens includes a harness system for extended control over the analysis pipeline. Trigger it through prompts — no files needed unless you want reusable configurations.
+
+### When Harness Activates
+
+The harness activates when you request features like deep analysis, validation, multi-instance orchestration, or custom hooks. Standard reviews run without harness involvement.
+
+### Hooks
+
+Inject custom logic at any stage of the PolyLens pipeline:
+
+| Stage | When it fires | Purpose |
+|-------|---------------|---------|
+| Pre-analysis | Before analysis | Inject context, load constraints |
+| Lens-select | During selection | Force lenses, override scoring |
+| Review | During lens reviews | Add frameworks, custom logic |
+| Collision | During conflict detection | Adjust conflict weights |
+| Synthesis | During brief synthesis | Override output format |
+| Post-analysis | After analysis | Summarize, notify external systems |
+
+#### User Prompt Examples
+
+**Deep analysis with validation:**
+```
+Run polylens review on our pricing strategy with deep analysis and full validation
+```
+
+**Inline hooks (no files needed):**
+```
+Run polylens review on our hiring plan with these hooks:
+
+PRE-ANALYSIS: This is a Series B startup. Team: 45 people. Runway: 18 months. Budget for hiring: $2M/year.
+POST-ANALYSIS: Generate a one-paragraph executive summary.
+```
+
+**Force specific lenses:**
+```
+Run polylens review with CTO and CISO lenses only
+```
+
+### Harness Orchestration
+
+Run multiple PolyLens analyses in sequence, parallel, or conditionally. The AI agent detects your intent and chains analyses automatically.
+
+#### User Prompt Examples
+
+**Sequential chaining:**
+```
+Run polylens review on our new API design. First do a technical review with CTO+CISO, then use that output to run a business impact review with CEO+CFO.
+```
+
+**Conditional orchestration:**
+```
+Run polylens review on our auth system redesign. If any HIGH security risks are found, automatically trigger a CISO deep-dive.
+```
+
+### Reasoning Control
+
+Control analysis depth, constraints, and output format via prompt keywords.
+
+#### User Prompt Examples
+
+**Deep analysis:**
+```
+Run polylens review with deep analysis on our migration plan
+```
+
+**With constraints:**
+```
+Run polylens review with budget under $50K and timeline Q2 2026 constraints
+```
+
+**Concise output:**
+```
+Run polylens review with concise output format
+```
+
+### Validation
+
+Automated checks appended to your decision brief: contract compliance, quality scoring, consistency verification.
+
+#### User Prompt Examples
+
+**Full validation:**
+```
+Run polylens review with full validation on our pricing strategy
+```
+
+**Validate existing brief:**
+```bash
+python3 tools/harness.py validate docs/polylens/reviews/260405_migration_r1.md
+```
+
+### CLI Reference
+
+```bash
+# List available hooks
+python3 tools/harness.py hooks list
+
+# Enable/disable a hook
+python3 tools/harness.py hooks enable pre-analysis/inject-context
+python3 tools/harness.py hooks disable pre-analysis/inject-context
+
+# Run with harness (AI agent handles this automatically)
+python3 tools/harness.py run "Your problem" --depth deep
+
+# Validate an existing brief
+python3 tools/harness.py validate docs/polylens/reviews/260405_migration_r1.md
+```
+
+### Configuration Files (Optional)
+
+For reusable setups, create files in `harness/`:
+
+- `harness/orchestration.md` — Multi-instance orchestration config
+- `harness/reasoning.md` — Default reasoning controls
+- `harness/validation.md` — Default validation settings
+
+Create reusable hooks in `hooks/<stage>/`:
+- `hooks/pre-analysis/inject-context.md`
+- `hooks/post-analysis/summarize.md`
+- etc.
+
+> **Note:** Harness features require Python 3. The core PolyLens review works without it.
+
+---
+
 ## 🧠 How It Works
 
 ```
@@ -373,6 +501,17 @@ polylens/
 ├── engines/                          # Shared processing logic
 │   ├── collision.md                  # Conflict detection & classification
 │   └── synthesis.md                  # Resolution strategies & output
+├── harness/                          # Harness configuration (orchestration, reasoning, validation)
+│   ├── orchestration.md
+│   ├── reasoning.md
+│   └── validation.md
+├── hooks/                            # Hook definitions (injected at pipeline stages)
+│   ├── pre-analysis/
+│   ├── lens-select/
+│   ├── review/
+│   ├── collision/
+│   ├── synthesis/
+│   └── post-analysis/
 ├── lenses/                           # Source lens briefs
 │   └── lens-*.md
 ├── orchestrators/                    # Internal multi-lens review modes
@@ -389,13 +528,17 @@ polylens/
 │   ├── polylens/                     # Top-level multi-lens router
 │   ├── polylens-lens-review/         # Single-entry focused lens router
 │   └── shared/                       # Installable runtime bundle used by the public skills
-│   │   ├── prompts/
-│   │   ├── engines/
-│   │   ├── lenses/
-│   │   ├── orchestrators/
-│   │   └── playbooks/
+│       ├── prompts/
+│       ├── engines/
+│       ├── harness/                  # Bundled harness configs
+│       ├── hooks/                    # Bundled hook definitions
+│       ├── lenses/
+│       ├── orchestrators/
+│       ├── playbooks/
+│       └── tools/                    # Bundled Python tools
 ├── tools/
-│   ├── sync_playbooks.py             # Sync source playbooks into the runtime bundle
+│   ├── harness.py                    # Harness engine (hook registry, orchestration, validation)
+│   ├── sync_playbooks.py             # Sync source files into the runtime bundle
 │   └── validate_markdown_contracts.py# Validate routers, lenses, engines, and templates stay aligned
 └── README.md                         # Project overview
 ```
