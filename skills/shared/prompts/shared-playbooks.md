@@ -13,7 +13,7 @@ These are shared capabilities, not separate perspective lenses. Use them when th
 | **Root Cause Analysis** | Investigate incidents, failures, recurring issues, and systemic causes | `../playbooks/root-cause-analysis.md` |
 | **Risk Assessment** | Identify, score, prioritize, and mitigate strategic, operational, financial, or technical risks | `../playbooks/risk-assessment.md` |
 | **Crisis Management** | Structure immediate response, command, containment, and recovery during active crises | `../playbooks/crisis-management.md` |
-| **PR Crisis Recovery** | Assess reputation damage, shape response posture, and rebuild stakeholder trust | `../playbooks/pr-crisis-recovery.md` |
+| **PR Crisis Recovery** | Required for PR crisis response or reputation recovery: evidence, accountability, coupled signals, and stakeholder impact | `../playbooks/pr-crisis-recovery.md` |
 | **Competitive Analysis** | Map competitors, compare positioning, identify threats and white-space opportunities | `../playbooks/competitive-analysis.md` |
 | **Go-to-Market Planning** | Structure product launches, market entry, messaging, channel strategy, and success metrics | `../playbooks/go-to-market-planning.md` |
 | **Scenario Planning** | Explore multiple plausible futures, stress-test strategies, identify early warning signals | `../playbooks/scenario-planning.md` |
@@ -35,4 +35,4 @@ When a lens or orchestrator applies a playbook:
 3. Use only the sections relevant to the decision.
 4. Fold findings back into the lens position or final synthesis.
 
-Playbooks are optional accelerators. They should sharpen the analysis, not replace the lens's core perspective.
+Playbooks are optional accelerators except PR Crisis Recovery, which is required for PR crisis response or reputation recovery before lens positions or public messaging. Its process gates apply to every lens; the lenses retain their distinct perspectives.

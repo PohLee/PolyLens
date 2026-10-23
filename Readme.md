@@ -164,7 +164,7 @@ Run polylens fully automatic pre-fight review on our pricing strategy
 
 Standard pre-fight stays interactive and stops when a fundamental split needs a user decision. Add language like *"fully automatic"*, *"decide for me"*, or *"without user input"* to force automatic arbitration and a completed recommendation.
 
-Pre-fight remains self-contained at runtime: the router delegates to the internal pre-fight orchestrator, which uses its embedded registry and lens briefs instead of reading other PolyLens files after activation.
+Pre-fight uses its embedded registry and lens briefs instead of reading other PolyLens files after activation, with one exception: PR crisis response or reputation recovery must load the bundled PR Crisis Recovery playbook and apply its gates without switching review modes.
 
 ### Markdown Artifact Storage
 

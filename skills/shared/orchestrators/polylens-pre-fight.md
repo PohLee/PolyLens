@@ -24,9 +24,11 @@ Mode rules:
 - Switch to `automatic` mode when the user explicitly asks for "fully automatic", "auto-resolve", "decide for me", "without user input", or equivalent wording
 - Announce the chosen mode before running the review
 
+For PR crisis response or reputation recovery, read and apply `../shared/playbooks/pr-crisis-recovery.md` before forming lens positions. Its gates are mandatory even when research is disabled. This playbook is the sole exception to the embedded-only reading rules below; use its evidence ledger and response checks within the pre-fight report, without switching review modes.
+
 ### Step 1: Select Lenses
 
-Use the embedded lens registry in this skill. Do not read external prompt files during pre-fight orchestration.
+Use the embedded lens registry in this skill. Apart from the PR playbook exception above, do not read external prompt files during pre-fight orchestration.
 
 **If the user specified lenses:** Use those lenses.
 
@@ -201,7 +203,7 @@ If the user asks to save, export, write, or generate the report as a markdown fi
 
 ## Embedded Lens Registry And Briefs
 
-Use the lens metadata below for automatic selection and the lens briefs below for position generation. Do not read other PolyLens files during pre-fight orchestration.
+Use the lens metadata below for automatic selection and the lens briefs below for position generation. Apart from the PR playbook exception above, do not read other PolyLens files during pre-fight orchestration.
 
 ### Selection Metadata
 

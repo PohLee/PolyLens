@@ -466,6 +466,62 @@ def validate_orchestrators(errors: list[str]) -> None:
         )
 
 
+def validate_pr_crisis_recovery(errors: list[str]) -> None:
+    """Check PR instructions and coverage, not the quality of generated advice."""
+    playbook_path = ROOT / "prompts" / "playbooks" / "pr-crisis-recovery.md"
+    fixtures_path = ROOT / "tests" / "fixtures" / "pr-crisis-recovery.md"
+    for path in [playbook_path, fixtures_path]:
+        require(path.exists(), f"missing PR contract file: {path.relative_to(ROOT)}", errors)
+    if not playbook_path.exists() or not fixtures_path.exists():
+        return
+
+    text = read_text(playbook_path)
+    for required_text in [
+        "### 1. Evidence Ledger",
+        "SUPPORTED FACT",
+        "USER-REPORTED",
+        "INFERENCE / FORECAST",
+        "UNKNOWN / DISPUTED",
+        "### 2. Decision and Accountability Gate",
+        "### 3. Coupled-Signal and Stakeholder Test",
+        "Admission signal",
+        "Historical-neglect signal",
+        "Displacement signal",
+        "Amplification and sequence",
+        "### 4. Compare Options and Select Posture",
+        "### 5. Build and Check the Message",
+        "### 6. Monitor Outcomes and Update Without Taking Sides",
+        "When web research is prohibited",
+        "A user's disagreement alone is not new factual evidence",
+        "UPDATE BASIS",
+    ]:
+        require(
+            required_text in text,
+            f"{playbook_path.relative_to(ROOT)}: missing '{required_text}'",
+            errors,
+        )
+
+    for path in [EXEC_REVIEW_PATH, PRE_FIGHT_PATH, LENS_REVIEW_PATH]:
+        text = read_text(path)
+        pointer = "../shared/playbooks/pr-crisis-recovery.md"
+        pointer_offset = text.find(pointer)
+        selection_offset = text.find("### Step 1:")
+        require(
+            0 <= pointer_offset < selection_offset
+            and "Its gates are mandatory even when research is disabled." in text,
+            f"{path.relative_to(ROOT)}: PR playbook must be mandatory before lens selection",
+            errors,
+        )
+
+    fixtures = read_text(fixtures_path)
+    for number in range(1, 11):
+        require(
+            f"## PR-{number:02d} —" in fixtures,
+            f"{fixtures_path.relative_to(ROOT)}: missing regression PR-{number:02d}",
+            errors,
+        )
+
+
 def validate_hook_frontmatter(hook_path: Path, errors: list[str]) -> None:
     """Validate that a hook file has correct frontmatter."""
     try:
@@ -588,6 +644,7 @@ def main() -> int:
     validate_collision(errors)
     validate_synthesis(errors)
     validate_orchestrators(errors)
+    validate_pr_crisis_recovery(errors)
     validate_hooks(errors)
     validate_harness(errors)
 

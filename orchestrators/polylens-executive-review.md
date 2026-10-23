@@ -16,6 +16,8 @@ Read the problem/plan being reviewed. Identify:
 - What is the context (codebase, branch, constraints)?
 - Are there specific lenses the user has requested?
 
+For PR crisis response or reputation recovery, read and apply `../shared/playbooks/pr-crisis-recovery.md` before forming lens positions. Its gates are mandatory even when research is disabled. Carry its evidence ledger and response checks through the existing brief sections.
+
 ### Step 0.5: Harness Execution (if active)
 
 If the harness is active (detected in Step 2.5 of the router), follow these instructions:

@@ -17,6 +17,8 @@ Read the problem or plan being reviewed. Identify:
 - Did the user explicitly name a lens?
 - Is the user asking for a single focused perspective rather than a multi-lens debate?
 
+For PR crisis response or reputation recovery, read and apply `../shared/playbooks/pr-crisis-recovery.md` before forming the lens position. Its gates are mandatory even when research is disabled. Include its evidence ledger and response checks in the focused review.
+
 ### Step 1: Select One Lens
 
 Read the bundled lens registry at `../shared/prompts/lens-registry.md`.
