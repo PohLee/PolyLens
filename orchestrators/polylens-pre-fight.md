@@ -252,6 +252,7 @@ If the user asks to save, export, write, or generate the report as a markdown fi
 
 Use the lens metadata below for automatic selection and the lens briefs below for position generation. Keep selection self-contained; use the context and playbook exceptions above without switching modes.
 
+<!-- BEGIN GENERATED LENSES -->
 ### Selection Metadata
 
 <!-- Generated from prompts/lens-registry.md; edit the source, then sync. -->
@@ -294,3 +295,4 @@ Use the lens metadata below for automatic selection and the lens briefs below fo
 - CRO brief: GO if it strengthens pipeline and predictability, MODIFY if GTM execution gaps exist, BLOCK if it undermines pricing integrity or targets wrong customers. Bias: predictable revenue > heroic sales.
 - CLO brief: GO if it's legally sound and compliant, MODIFY if legal guardrails are needed, BLOCK if it creates unacceptable legal or regulatory risk. Bias: legal compliance > business speed.
 - CCO brief: GO if it improves retention and customer experience, MODIFY if customer impact is unmanaged, BLOCK if it creates unacceptable churn risk or degrades trust. Bias: customer retention > acquisition speed.
+<!-- END GENERATED LENSES -->

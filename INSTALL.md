@@ -143,6 +143,10 @@ Without Bash, use `python tools/install_bundle.py --target <skills-root> --layou
 or `--layout opencode`. Standalone build commands still produce `dist/standard-polylens/`
 and `dist/opencode-polylens/` when a release artifact is wanted.
 
+Build and install entrypoints reject stale generated projections before replacing output.
+After editing the Registry or other projection sources, run `python tools/sync_playbooks.py`
+and review the generated changes before building. Builds do not rewrite source files for you.
+
 ## Verification Checklist
 
 After installation:

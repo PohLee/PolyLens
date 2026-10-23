@@ -15,7 +15,9 @@
 Checks are opt-in during reviews. `harness.py validate brief.md` explicitly enables the
 standard brief contract check even when these defaults are disabled.
 
-- `contract`: deterministic full/partial brief structure and lens verdict checks.
+- `contract`: deterministic full/partial brief structure and lens verdict checks. Positions,
+  completion sections, and pending-split options have distinct ownership; duplicate sections
+  or position fields are rejected as ambiguous.
 - `quality_gate`: legacy name for format hints only, not a measure of reasoning quality.
 - `consistency`: deterministic verdict-alignment checks, not factual verification.
 - `regression`: fail when section/verdict structure or whitespace-normalized content differs from a baseline. Drift is a review signal, not proof that the new recommendation is worse.

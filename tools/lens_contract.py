@@ -4,53 +4,96 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Mapping
 
 ROOT = Path(__file__).resolve().parents[1]
 FIELDS = ("focus", "domains", "triggers", "owns_decisions", "veto_on", "pairs_with", "default", "active", "bias", "verdict_style")
+PROJECTION_TARGETS = ("orchestrators/polylens-executive-review.md", "orchestrators/polylens-pre-fight.md", "skills/polylens-lens-review/SKILL.md")
+PROJECTION_SOURCES = ("prompts/lens-registry.md", "prompts/project-context.md", *PROJECTION_TARGETS)
 
 
 def parse_registry(text: str) -> tuple[list[str], dict[str, dict[str, str]]]:
-    headings = list(re.finditer(r"^###\s+([A-Z][A-Za-z]*)\s+—\s+.+$", text, re.MULTILINE))
+    """Return only a valid Registry; authoring errors never reach a generator."""
+    sections = list(re.finditer(r"^##[ \t]+Lenses[ \t]*$", text, re.MULTILINE))
+    if len(sections) != 1:
+        raise ValueError("Expected one Lenses section heading")
+    text = text[sections[0].end():]
+    end = re.search(r"^##[ \t]+", text, re.MULTILINE)
+    text = text[:end.start()] if end else text
+    headings = list(re.finditer(r"^#{3,6}[^\n]*$", text, re.MULTILINE))
+    if not headings:
+        raise ValueError("Registry contains no lens entries")
     order, entries = [], {}
-    for index, match in enumerate(headings):
-        name = match.group(1)
-        block = text[match.end():headings[index + 1].start() if index + 1 < len(headings) else len(text)]
+    names = []
+    for heading in headings:
+        match = re.fullmatch(r"###[ \t]+([A-Z][A-Za-z]*)[ \t]+—[ \t]+\S[^\n]*", heading.group())
+        if match is None:
+            raise ValueError(f"Malformed lens heading: {heading.group()}")
+        names.append(match.group(1))
+    for index, heading in enumerate(headings):
+        name = names[index]
+        if name in entries:
+            raise ValueError(f"Duplicate lens ID: {name}")
+        block = text[heading.end():headings[index + 1].start() if index + 1 < len(headings) else len(text)]
         fields = {}
         for key in FIELDS:
-            value = re.search(rf"- \*\*{key}:\*\*\s*(.+)", block)
-            if value:
-                fields[key] = value.group(1).strip()
+            values = re.findall(rf"^- \*\*{key}:\*\*[ \t]*([^\n]*)$", block, re.MULTILINE)
+            if len(values) != 1 or not values[0].strip():
+                raise ValueError(f"{name}: require one nonempty {key} field")
+            fields[key] = values[0].strip()
+        for key in ("active", "default"):
+            if fields[key] not in ("true", "false"):
+                raise ValueError(f"{name}: {key} must be true or false")
         order.append(name)
         entries[name] = fields
+    for name, fields in entries.items():
+        for pair in fields["pairs_with"].split(","):
+            if pair.strip() not in entries:
+                raise ValueError(f"{name}: unknown pairs_with lens '{pair.strip()}'")
     return order, entries
 
 
-def projected_documents(root: Path = ROOT) -> dict[Path, str]:
-    registry = (root / "prompts/lens-registry.md").read_text(encoding="utf-8")
-    algorithm = registry.split("## Selection Algorithm (for orchestrator reference)\n", 1)[1].split("Example guidance:", 1)[0].strip()
-    block = "<!-- BEGIN GENERATED SELECTION -->\n" + algorithm + "\n<!-- END GENERATED SELECTION -->"
+def _region(text: str, name: str) -> tuple[int, int]:
+    begin, end = f"<!-- BEGIN {name} -->", f"<!-- END {name} -->"
+    if text.count(begin) != 1 or text.count(end) != 1:
+        raise ValueError(f"Expected one paired {name} region")
+    start, stop = text.index(begin) + len(begin), text.index(end)
+    if start > stop:
+        raise ValueError(f"Reversed {name} region")
+    return start, stop
+
+
+def _replace_region(text: str, name: str, content: str) -> str:
+    start, stop = _region(text, name)
+    return text[:start] + "\n" + content.strip() + "\n" + text[stop:]
+
+
+def project_documents(sources: Mapping[str, str]) -> dict[str, str]:
+    """Project captured source texts; filesystem and release callers share this contract."""
+    registry = sources["prompts/lens-registry.md"]
+    order, entries = parse_registry(registry)
+    start, stop = _region(registry, "SELECTION CONTRACT")
+    algorithm = registry[start:stop].strip()
+    if not algorithm:
+        raise ValueError("Empty SELECTION CONTRACT region")
     documents = {}
-    for relative in ("orchestrators/polylens-executive-review.md", "orchestrators/polylens-pre-fight.md", "skills/polylens-lens-review/SKILL.md"):
-        path = root / relative
-        text = path.read_text(encoding="utf-8")
-        if "<!-- BEGIN GENERATED SELECTION -->" in text:
-            text, count = re.subn(r"<!-- BEGIN GENERATED SELECTION -->.*?<!-- END GENERATED SELECTION -->", lambda _: block, text, flags=re.DOTALL)
-        else:
-            pattern = r"(?<=\*\*If no lens was specified:\*\* )Select exactly one lens using this algorithm:\n.*?(?=\n\nAnnounce)" if "polylens-lens-review" in relative else r"(?<=\*\*If no lenses specified:\*\* )Run the selection algorithm:\n.*?(?=\n\nPricing guidance:)"
-            text, count = re.subn(pattern, lambda _: "Apply the authoritative selection contract:\n\n" + block, text, flags=re.DOTALL)
-        if count != 1:
-            raise ValueError(f"Expected one generated selection section in {relative}")
+    for relative in PROJECTION_TARGETS:
+        text = sources[relative]
+        text = _replace_region(text, "GENERATED SELECTION", algorithm)
         if "pre-fight" in relative:
-            context = (root / "prompts/project-context.md").read_text(encoding="utf-8").strip()
-            text, context_count = re.subn(r"<!-- BEGIN GENERATED CONTEXT -->.*?<!-- END GENERATED CONTEXT -->", lambda _: "<!-- BEGIN GENERATED CONTEXT -->\n" + context + "\n<!-- END GENERATED CONTEXT -->", text, flags=re.DOTALL)
-            if context_count != 1:
-                raise ValueError("Expected one embedded project context protocol in pre-fight")
-            order, entries = parse_registry(registry)
+            context = sources["prompts/project-context.md"].strip()
+            text = _replace_region(text, "GENERATED CONTEXT", context)
             metadata = [f"- {name}: " + "; ".join(f"{key}: {entries[name][key]}" for key in FIELDS if key != "verdict_style") for name in order]
             briefs = [f"- {name} brief: {entries[name]['verdict_style']}. Bias: {entries[name]['bias']}." for name in order]
-            text = text.split("### Selection Metadata", 1)[0] + "### Selection Metadata\n\n<!-- Generated from prompts/lens-registry.md; edit the source, then sync. -->\n" + "\n".join(metadata) + "\n\n### Lens Briefs\n\n" + "\n".join(briefs) + "\n"
-        documents[path] = text
+            content = "### Selection Metadata\n\n<!-- Generated from prompts/lens-registry.md; edit the source, then sync. -->\n" + "\n".join(metadata) + "\n\n### Lens Briefs\n\n" + "\n".join(briefs)
+            text = _replace_region(text, "GENERATED LENSES", content)
+        documents[relative] = text
     return documents
+
+
+def projected_documents(root: Path = ROOT) -> dict[Path, str]:
+    sources = {relative: (root / relative).read_text(encoding="utf-8") for relative in PROJECTION_SOURCES}
+    return {root / relative: text for relative, text in project_documents(sources).items()}
 
 
 def projection_errors(root: Path = ROOT) -> list[str]:

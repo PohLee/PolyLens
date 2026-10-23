@@ -7,7 +7,8 @@ import sys
 from pathlib import Path
 from lens_contract import parse_registry, projection_errors
 from runtime_bundle import check_runtime
-from harness import HookRegistry, load_orchestration_config, load_reasoning_config, load_validation_config
+from harness import HOOK_STAGES, HookRegistry, load_orchestration_config, load_reasoning_config, load_validation_config
+from brief_contract import missing_position_fields
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,26 +33,6 @@ HOOKS_DIR = ROOT / "hooks"
 HARNESS_DIR = ROOT / "harness"
 BUNDLED_HOOKS_DIR = SHARED_DIR / "hooks"
 BUNDLED_HARNESS_DIR = SHARED_DIR / "harness"
-
-HOOK_STAGES = ["pre-analysis", "lens-select", "review", "collision", "synthesis", "post-analysis"]
-
-
-LENS_REQUIRED_FIELDS = [
-    "Verdict:",
-    "Decision context impact:",
-    "Lens domain impact:",
-    "Decision framing:",
-    "- Scope:",
-    "- Timeline:",
-    "- Resource:",
-    "- Risk:",
-    "- Success Criteria:",
-    "- Assumptions / Unknowns:",
-    "Key concerns:",
-    "Key endorsements:",
-    "Non-negotiables:",
-]
-
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
@@ -85,12 +66,13 @@ def validate_lens_projections(errors: list[str]) -> None:
         errors.append(f"Cannot generate lens projections: {error}")
 
 
-def validate_registry(errors: list[str]) -> list[str]:
+def validate_registry(errors: list[str]) -> tuple[list[str], list[str]]:
     text = read_text(REGISTRY_PATH)
-    order, entries = parse_registry(text)
-
-    require(bool(order), f"{REGISTRY_PATH.relative_to(ROOT)}: no lens entries found", errors)
-    require(len(order) == len(set(order)), "duplicate lens IDs in registry", errors)
+    try:
+        order, entries = parse_registry(text)
+    except ValueError as error:
+        errors.append(f"{REGISTRY_PATH.relative_to(ROOT)}: {error}")
+        return [], []
     require(
         "Selection should be deterministic." in text,
         f"{REGISTRY_PATH.relative_to(ROOT)}: missing deterministic selection guidance",
@@ -102,40 +84,8 @@ def validate_registry(errors: list[str]) -> list[str]:
         errors,
     )
 
-    for lens_name in order:
-        fields = entries[lens_name]
-        for boolean in ("active", "default"):
-            require(fields.get(boolean) in ("true", "false"), f"{lens_name}: {boolean} must be true or false", errors)
-        for required_field in [
-            "focus",
-            "domains",
-            "triggers",
-            "owns_decisions",
-            "veto_on",
-            "pairs_with",
-            "default",
-            "active",
-            "bias",
-            "verdict_style",
-        ]:
-            require(
-                required_field in fields,
-                f"{REGISTRY_PATH.relative_to(ROOT)}: lens {lens_name} is missing field '{required_field}'",
-                errors,
-            )
-
-    known_lenses = set(order)
-    for lens_name, fields in entries.items():
-        pairs = [item.strip() for item in fields.get("pairs_with", "").split(",") if item.strip()]
-        for pair in pairs:
-            require(
-                pair in known_lenses,
-                f"{REGISTRY_PATH.relative_to(ROOT)}: lens {lens_name} references unknown pairs_with lens '{pair}'",
-                errors,
-            )
-
     active_lenses = [name for name, fields in entries.items() if fields.get("active") == "true"]
-    return active_lenses
+    return order, active_lenses
 
 
 def validate_lens_brief(lens_name: str, errors: list[str]) -> None:
@@ -157,12 +107,8 @@ def validate_lens_brief(lens_name: str, errors: list[str]) -> None:
     )
 
     position = re.search(rf"---BEGIN {re.escape(lens_name)} POSITION---(.*?)---END {re.escape(lens_name)} POSITION---", text, re.DOTALL)
-    for required_field in LENS_REQUIRED_FIELDS:
-        require(
-            position is not None and required_field in position.group(1),
-            f"{lens_path.relative_to(ROOT)}: missing '{required_field}' in lens output contract",
-            errors,
-        )
+    for field in missing_position_fields(position.group(1) if position else ""):
+        errors.append(f"{lens_path.relative_to(ROOT)}: missing '{field}' in lens output contract")
 
     for required_text in [
         "Available tools when they materially improve judgment:",
@@ -515,36 +461,11 @@ def validate_decision_protocol(errors: list[str]) -> None:
 
 
 def validate_hook_frontmatter(hook_path: Path, errors: list[str]) -> None:
-    """Validate that a hook file has correct frontmatter."""
+    """Reuse the runtime Hook contract, including JSON/flat syntax and defaults."""
     try:
-        text = hook_path.read_text(encoding="utf-8")
-    except Exception:
-        errors.append(f"Cannot read hook file: {hook_path.relative_to(ROOT)}")
-        return
-
-    if not text.startswith("---"):
-        errors.append(f"{hook_path.relative_to(ROOT)}: missing frontmatter")
-        return
-
-    required_fields = ["hook:", "name:", "order:", "enabled:", "type:"]
-    for field_name in required_fields:
-        if field_name not in text:
-            errors.append(f"{hook_path.relative_to(ROOT)}: missing field '{field_name.rstrip(':')}'")
-
-    # Validate hook stage matches directory
-    match = re.search(r"hook:\s*(\S+)", text)
-    if match:
-        stage = match.group(1)
-        parent_dir = hook_path.parent.name
-        if stage != parent_dir:
-            errors.append(f"{hook_path.relative_to(ROOT)}: hook stage '{stage}' doesn't match directory '{parent_dir}'")
-
-    # Validate type is markdown or script
-    match = re.search(r"type:\s*(\S+)", text)
-    if match:
-        hook_type = match.group(1)
-        if hook_type not in ("markdown", "script"):
-            errors.append(f"{hook_path.relative_to(ROOT)}: invalid type '{hook_type}', must be 'markdown' or 'script'")
+        HookRegistry.load_file(hook_path)
+    except (OSError, ValueError, TypeError) as error:
+        errors.append(f"{hook_path.relative_to(ROOT)}: {error}")
 
 
 def validate_harness_config(config_path: Path, errors: list[str]) -> None:
@@ -569,14 +490,8 @@ def validate_hooks(errors: list[str]) -> None:
     """Validate all hook files."""
     if not HOOKS_DIR.exists():
         return
-    try:
-        HookRegistry.load(HOOKS_DIR)
-    except (ValueError, TypeError, OSError) as error:
-        errors.append(f"Invalid hook registry: {error}")
-
-    for stage in HOOK_STAGES:
-        stage_dir = HOOKS_DIR / stage
-        if not stage_dir.exists():
+    for stage_dir in sorted(HOOKS_DIR.iterdir()):
+        if not stage_dir.is_dir():
             continue
         for hook_file in sorted(stage_dir.glob("*.md")):
             validate_hook_frontmatter(hook_file, errors)
@@ -636,9 +551,8 @@ def main() -> int:
             print(f"- {error}", file=sys.stderr)
         return 1
 
-    active_lenses = validate_registry(errors)
+    all_lenses, active_lenses = validate_registry(errors)
     validate_lens_projections(errors)
-    all_lenses, _ = parse_registry(read_text(REGISTRY_PATH))
     validate_skill_inventory(all_lenses, errors)
     for lens_name in all_lenses:
         validate_lens_brief(lens_name, errors)

@@ -256,6 +256,8 @@ Each lens entry contains:
 
 ## Selection Algorithm (for orchestrator reference)
 
+<!-- BEGIN SELECTION CONTRACT -->
+
 1. **Filter active lenses:** Only consider lenses where `active: true`
 2. **Identify the decision anchor:** Separate the primary decision being asked from supporting constraints. The primary decision should drive the first lens selection.
 3. **Promote decision owners first:** If the anchor matches a lens's `owns_decisions`, that lens should usually be selected before adjacent lenses that only evaluate consequences of the decision.
@@ -269,6 +271,8 @@ Each lens entry contains:
 11. **Cap secondary lenses:** After the anchor lens, its owner, and any necessary strategy complement, add supporting lenses only when they introduce a distinct decision axis with explicit evidence. Do not add finance, security, or operations lenses solely because those concerns exist in the background.
 12. **Break ties deterministically:** Use this order: stronger ownership match, stronger decision-anchor match, more direct user wording match, stronger trigger match, `default: true`, registry order
 13. **Fallback:** Only if all scores < 2, use active lenses marked `default: true`; exactly 2 is a strong match. In focused mode choose the highest-ranked default lens only.
+
+<!-- END SELECTION CONTRACT -->
 
 Example guidance:
 - If the user asks about "tech stack," anchor on CTO first and usually include CEO because stack choice shapes speed, leverage, and company direction.

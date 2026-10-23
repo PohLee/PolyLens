@@ -15,6 +15,77 @@ from runtime_bundle import build_bundle
 
 
 class HarnessCLITests(unittest.TestCase):
+    def test_position_cannot_supply_completion_sections(self):
+        text = (ROOT / "tests/fixtures/brief-valid.md").read_text(encoding="utf-8")
+        text = text.replace("## CONFIDENCE LEVEL\nHigh", "").replace(
+            "---END CTO POSITION---", "## CONFIDENCE LEVEL\nHigh\n---END CTO POSITION---", 1)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "brief.md"
+            path.write_text(text, encoding="utf-8")
+            result = self.run_cli("validate", path, "--json")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("CONFIDENCE LEVEL", json.loads(result.stdout)["contract"]["missing_sections"])
+
+    def test_duplicate_position_fields_are_ambiguous(self):
+        text = (ROOT / "tests/fixtures/brief-valid.md").read_text(encoding="utf-8")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "brief.md"
+            path.write_text(text.replace("- Scope: HOLD", "- Scope: EXPAND\n- Scope: HOLD", 1), encoding="utf-8")
+            result = self.run_cli("validate", path, "--json")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("duplicate position field", result.stdout)
+
+    def test_alignment_is_read_only_from_the_alignment_section(self):
+        text = (ROOT / "tests/fixtures/brief-valid.md").read_text(encoding="utf-8")
+        text = text.replace("Key concerns:", "Alignment: SPLIT\nKey concerns:", 1)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "brief.md"
+            path.write_text(text, encoding="utf-8")
+            config = self.config(directory, "validation.md", {"validation": {"consistency": True}})
+            result = self.run_cli("validate", path, "--config", config, "--json")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            path.write_text(text.replace("Alignment: UNANIMOUS", "Alignment: UNANIMOUS\nAlignment: SPLIT"), encoding="utf-8")
+            result = self.run_cli("validate", path, "--config", config, "--json")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(json.loads(result.stdout)["consistency"]["passed"])
+
+    def test_duplicate_and_misowned_sections_are_rejected(self):
+        text = (ROOT / "tests/fixtures/brief-valid.md").read_text(encoding="utf-8")
+        variants = [text + "\n## CONFIDENCE LEVEL\nLow\n", text.replace(
+            "## CONFIDENCE LEVEL\nHigh", "").replace("## ALIGNED PLAN", "## CONFIDENCE LEVEL\nHigh\n## ALIGNED PLAN"),
+            text.replace("## CONFIDENCE LEVEL", "## APPENDIX\n## CONFIDENCE LEVEL")]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "brief.md"
+            for variant in variants:
+                path.write_text(variant, encoding="utf-8")
+                result = self.run_cli("validate", path, "--json")
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+
+    def test_pending_option_cannot_borrow_fields_from_the_split_footer(self):
+        text = (ROOT / "tests/fixtures/brief-valid.md").read_text(encoding="utf-8")
+        partial = text.split("## ALIGNED PLAN")[0] + """## DECISION SPLIT (AWAITING USER INPUT)
+Decision needed: Choose a scope
+Why escalation happened: Irreconcilable scope requirements
+## OPTION A
+Supported by: CTO
+What changes: Online only
+Upside: Simpler
+Downside: No offline access
+## OPTION B
+Supported by: CEO
+What changes: Offline support
+Upside: More access
+What the user should answer: Choose a scope
+What remains blocked until then: Launch
+Downside: More work
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "brief.md"
+            path.write_text(partial, encoding="utf-8")
+            result = self.run_cli("validate", path, "--json")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("OPTION B requires", result.stdout)
+
     def test_hook_toggle_only_updates_metadata_for_json_and_flat_frontmatter(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "bundle"

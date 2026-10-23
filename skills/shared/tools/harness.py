@@ -10,6 +10,7 @@ import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
+from brief_contract import parse_brief
 
 ROOT = Path(__file__).resolve().parents[1]
 HOOKS_DIR = ROOT / "hooks"
@@ -114,14 +115,12 @@ class HookRegistry:
             if not stage_dir.is_dir():
                 continue
             for hook_file in sorted(stage_dir.glob("*.md")):
-                hook = cls._load_hook(hook_file)
-                if hook:
-                    registry.hooks.append(hook)
+                registry.hooks.append(cls.load_file(hook_file))
 
         return registry
 
     @classmethod
-    def _load_hook(cls, file_path: Path) -> HookDef | None:
+    def load_file(cls, file_path: Path) -> HookDef:
         """Load a single hook from a markdown file."""
         text = file_path.read_text(encoding="utf-8")
 
@@ -438,60 +437,7 @@ def validate_contract(brief_path: Path | None) -> dict[str, Any]:
     except Exception as e:
         return {"passed": False, "note": f"Cannot read file: {e}"}
 
-    headings = _headings(text)
-    partial = "DECISION SPLIT (AWAITING USER INPUT)" in headings
-    required = ["VERDICT ALIGNMENT", "CONFLICT MAP"]
-    required += ["DECISION SPLIT (AWAITING USER INPUT)"] if partial else [
-        "ALIGNED PLAN", "ASSUMPTIONS / UNKNOWNS", "EXECUTIVE ALIGNMENT REVIEW - COMPLETION SUMMARY",
-        "FINAL DECISION", "KEY TRADEOFFS", "RISKS ACCEPTED", "MITIGATION PLAN", "DISSENTING OPINIONS", "CONFIDENCE LEVEL",
-    ]
-    missing = [s for s in required if s not in headings]
-    issues = []
-    positions = _positions(text)
-    names = [name for name, _ in positions]
-    if not 2 <= len(positions) <= 4 or len(set(names)) != len(names):
-        issues.append("Require 2-4 unique delimited lens positions")
-    if len(re.findall(r"^---BEGIN ", text, re.MULTILINE)) != len(positions) or len(re.findall(r"^---END ", text, re.MULTILINE)) != len(positions):
-        issues.append("Unmatched position delimiters")
-    fields = ["Verdict:", "Decision context impact:", "Lens domain impact:", "Decision framing:",
-        "- Scope:", "- Timeline:", "- Resource:", "- Risk:", "- Success Criteria:", "- Assumptions / Unknowns:",
-        "Key concerns:", "Key endorsements:", "Non-negotiables:"]
-    for name, body in positions:
-        for label in fields:
-            if not re.search(rf"^{re.escape(label)}", body, re.MULTILINE):
-                issues.append(f"{name}: missing position field {label}")
-        if not re.search(r"^Verdict: (GO|MODIFY|BLOCK)\s*$", body, re.MULTILINE):
-            issues.append(f"{name}: invalid verdict")
-    if partial and any(s in headings for s in ("ALIGNED PLAN", "FINAL DECISION", "EXECUTIVE ALIGNMENT REVIEW - COMPLETION SUMMARY")):
-        issues.append("Pending decision must not present a completed brief")
-    if partial:
-        split = text.split("DECISION SPLIT (AWAITING USER INPUT)", 1)[1]
-        for field in ("Decision needed", "Why escalation happened", "What the user should answer", "What remains blocked until then"):
-            if not re.search(rf"^{field}:[ \t]*\S", split, re.MULTILINE):
-                issues.append(f"Partial brief requires {field}")
-        for option in ("OPTION A", "OPTION B"):
-            section = re.search(rf"^(?:#{{1,6}}\s+)?{option}\s*\n(.*?)(?=^(?:#{{1,6}}\s+)?OPTION [AB]\s*$|\Z)", split, re.MULTILINE | re.DOTALL)
-            for field in ("Supported by", "What changes", "Upside", "Downside"):
-                if section is None or not re.search(rf"^{field}:[ \t]*\S", section.group(1), re.MULTILINE):
-                    issues.append(f"{option} requires {field}")
-    return {"passed": not missing and not issues, "kind": "partial" if partial else "complete", "missing_sections": missing, "issues": issues}
-
-
-def _headings(text: str) -> list[str]:
-    return re.findall(r"^(?:#{1,6}\s+)?([A-Z][A-Z0-9 /()—-]+?)\s*$", text, re.MULTILINE)
-
-
-def _positions(text: str) -> list[tuple[str, str]]:
-    return re.findall(r"^---BEGIN ([A-Z][A-Za-z]*) POSITION---\s*\n(.*?)^---END \1 POSITION---\s*$", text, re.MULTILINE | re.DOTALL)
-
-
-def _verdicts(text: str) -> dict[str, str]:
-    verdicts = {}
-    for name, body in _positions(text):
-        match = re.search(r"^Verdict: (GO|MODIFY|BLOCK)\s*$", body, re.MULTILINE)
-        if match:
-            verdicts[name] = match.group(1)
-    return verdicts
+    return parse_brief(text).contract()
 
 
 def validate_quality_gate(brief_path: Path) -> dict[str, Any]:
@@ -500,7 +446,7 @@ def validate_quality_gate(brief_path: Path) -> dict[str, Any]:
         text = brief_path.read_text(encoding="utf-8")
     except Exception:
         return {"passed": False, "note": "Cannot read file"}
-    return {"advisory": True, "note": "Format hints only; reasoning quality is not measured", "word_count": len(text.split()), "lens_count": len(_positions(text))}
+    return {"advisory": True, "note": "Format hints only; reasoning quality is not measured", "word_count": len(text.split()), "lens_count": len(parse_brief(text).positions)}
 
 
 def validate_consistency(brief_path: Path) -> dict[str, Any]:
@@ -510,21 +456,7 @@ def validate_consistency(brief_path: Path) -> dict[str, Any]:
     except Exception:
         return {"passed": False, "note": "Cannot read file"}
 
-    issues = []
-
-    verdicts = list(_verdicts(text).values())
-    alignment = re.search(r"^Alignment: (UNANIMOUS|SPLIT|ALL DISAGREE)\s*$", text, re.MULTILINE)
-    if not verdicts or not alignment:
-        issues.append("Missing lens verdicts or alignment label")
-    else:
-        expected = "UNANIMOUS" if len(set(verdicts)) == 1 else "ALL DISAGREE" if len(set(verdicts)) == len(verdicts) else "SPLIT"
-        if alignment.group(1) != expected:
-            issues.append(f"Initial verdicts require {expected} alignment")
-
-    return {
-        "passed": len(issues) == 0,
-        "issues": issues,
-    }
+    return parse_brief(text).consistency()
 
 
 def validate_regression(brief_path: Path, baseline_path: Path) -> dict[str, Any]:
@@ -535,17 +467,7 @@ def validate_regression(brief_path: Path, baseline_path: Path) -> dict[str, Any]
     except Exception as e:
         return {"passed": False, "note": f"Cannot read files: {e}"}
 
-    sections_changed = _headings(text) != _headings(baseline)
-    verdicts_changed = _verdicts(text) != _verdicts(baseline)
-    content_changed = " ".join(text.split()) != " ".join(baseline.split())
-    return {
-        "passed": not sections_changed and not verdicts_changed and not content_changed,
-        "delta": {
-            "sections_changed": sections_changed,
-            "verdicts_changed": verdicts_changed,
-            "content_changed": content_changed,
-        },
-    }
+    return parse_brief(text).regression(parse_brief(baseline))
 
 
 def print_validation_report(results: dict[str, Any]) -> None:

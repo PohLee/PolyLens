@@ -10,7 +10,7 @@ import tempfile
 import uuid
 from pathlib import Path
 
-from runtime_bundle import PUBLIC_SKILLS, build_bundle, verify_bundle
+from runtime_bundle import PUBLIC_SKILLS, build_bundle
 
 MARKER = ".polylens-install.json"
 OWNERSHIP = {"owner": "polylens", "schema": 1}
@@ -42,7 +42,7 @@ def install(target: Path, nested: bool) -> None:
     with tempfile.TemporaryDirectory(prefix=".polylens-stage-", dir=target) as directory:
         stage = Path(directory)
         bundle = stage / "bundle"
-        build_bundle(bundle, nested)
+        snapshot = build_bundle(bundle, nested)
         for name in entries:
             (bundle / name / MARKER).write_text(json.dumps(OWNERSHIP), encoding="utf-8")
         try:
@@ -54,7 +54,7 @@ def install(target: Path, nested: bool) -> None:
                     moved.append(name)
                 (bundle / name).rename(destination)
                 installed.append(name)
-            verify_bundle(target, nested)
+            snapshot.verify(target)
         except Exception:
             for name in reversed(installed):
                 shutil.rmtree(target / name)  # Only paths just installed by this invocation.

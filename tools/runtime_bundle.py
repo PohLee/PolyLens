@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import re
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
-from lens_contract import parse_registry
+from lens_contract import parse_registry, project_documents
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,7 +33,8 @@ def runtime_files(root: Path = ROOT) -> dict[Path, str]:
             if path.name == "shared-playbooks.md":
                 content = content.replace("prompts/playbooks/", "../playbooks/")
             files[Path(destination) / path.relative_to(source_dir)] = content
-    files[Path("tools/harness.py")] = (root / "tools/harness.py").read_text(encoding="utf-8")
+    for name in ("harness.py", "brief_contract.py"):
+        files[Path("tools") / name] = (root / "tools" / name).read_text(encoding="utf-8")
     files[Path("LICENSE")] = (root / "LICENSE").read_text(encoding="utf-8")
     return files
 
@@ -57,24 +59,66 @@ def check_runtime(destination: Path, root: Path = ROOT) -> list[str]:
     return errors
 
 
-def verify_bundle(destination: Path, nested: bool, root: Path = ROOT) -> None:
-    """Check the dependency closure from each installed public skill."""
+@dataclass(frozen=True)
+class BundleSnapshot:
+    """One captured release, reused for writing, both layouts and post-move checks."""
+
+    nested: bool
+    _files: tuple[tuple[Path, bytes], ...]
+
+    def verify(self, destination: Path) -> None:
+        for relative, content in self._files:
+            path = destination / relative
+            if not path.is_file():
+                raise ValueError(f"missing release dependency: {path}")
+            if path.read_bytes() != content:
+                raise ValueError(f"release content mismatch: {path}")
+        _verify_dependencies(destination, self.nested)
+
+
+def _capture_bundle(nested: bool, root: Path) -> BundleSnapshot:
+    runtime = runtime_files(root)
+    public_files = {}
+    sources = {relative.as_posix(): text for relative, text in runtime.items()}
+    for skill in PUBLIC_SKILLS:
+        source = root / "skills" / skill
+        for path in sorted(source.rglob("*")):
+            if path.is_file():
+                relative = Path(skill) / path.relative_to(source)
+                public_files[relative] = path.read_bytes()
+                if path.suffix == ".md":
+                    sources[(Path("skills") / relative).as_posix()] = public_files[relative].decode("utf-8").replace("\r\n", "\n")
+    # Freshness must be a property of this capture, not an earlier disk read.
+    for relative, expected in project_documents(sources).items():
+        if sources[relative] != expected:
+            raise ValueError(f"stale generated lens contract: {relative} (run tools/sync_playbooks.py)")
+    files = {}
+    for relative, content in public_files.items():
+        if nested and relative.suffix == ".md":
+            content = content.replace(b"../shared/", b"shared/")
+        files[relative] = content
+    for skill in PUBLIC_SKILLS:
+        shared = Path(skill) / "shared" if nested else Path("shared")
+        for relative, text in runtime.items():
+            if nested and relative.suffix == ".md":
+                text = text.replace("../shared/", "../")
+            files[shared / relative] = text.encode("utf-8")
+    return BundleSnapshot(nested, tuple(files.items()))
+
+
+def _verify_dependencies(destination: Path, nested: bool) -> None:
+    """Check concrete references using only the captured release on disk."""
     references = re.compile(r"(?:\.\./shared/|shared/|\.\./(?:prompts|engines|lenses|orchestrators|playbooks|tools|harness|hooks)/)[^\s`\)\],;]+")
     for skill in PUBLIC_SKILLS:
         skill_dir = destination / skill
         shared = skill_dir / "shared" if nested else destination / "shared"
-        for required in (skill_dir / "SKILL.md", *(shared / relative for relative in runtime_files(root))):
-            if not required.is_file():
-                raise ValueError(f"missing release dependency: {required}")
-        order, entries = parse_registry((shared / "prompts/lens-registry.md").read_text(encoding="utf-8"))
-        if not order or len(order) != len(set(order)):
-            raise ValueError("Release registry must contain unique lens IDs")
+        if not (skill_dir / "SKILL.md").is_file():
+            raise ValueError(f"missing release entrypoint: {skill_dir}")
+        order, _ = parse_registry((shared / "prompts/lens-registry.md").read_text(encoding="utf-8"))
         for name in order:
             brief = shared / "lenses" / f"lens-{name.lower()}.md"
             if not brief.is_file():
                 raise ValueError(f"missing release lens dependency: {brief}")
-            if any(entries[name].get(key) not in ("true", "false") for key in ("active", "default")):
-                raise ValueError(f"invalid release lens boolean: {name}")
         for document in [skill_dir / "SKILL.md", *shared.rglob("*.md")]:
             for match in references.finditer(document.read_text(encoding="utf-8")):
                 reference = match.group().rstrip(".:")
@@ -86,19 +130,20 @@ def verify_bundle(destination: Path, nested: bool, root: Path = ROOT) -> None:
                     raise ValueError(f"unresolved release reference in {document}: {reference}")
 
 
-def build_bundle(destination: Path, nested: bool, root: Path = ROOT) -> None:
+def verify_bundle(destination: Path, nested: bool, root: Path = ROOT) -> None:
+    """Compare an existing release with current source; builds retain their own snapshot."""
+    _capture_bundle(nested, root).verify(destination)
+
+
+def build_bundle(destination: Path, nested: bool, root: Path = ROOT) -> BundleSnapshot:
     """Build in a caller-owned output directory, never a user skills directory."""
+    snapshot = _capture_bundle(nested, root)
     if destination.exists():
         shutil.rmtree(destination)
     destination.mkdir(parents=True)
-    for skill in PUBLIC_SKILLS:
-        shutil.copytree(root / "skills" / skill, destination / skill)
-        if nested:
-            path = destination / skill / "SKILL.md"
-            path.write_text(path.read_text(encoding="utf-8").replace("../shared/", "shared/"), encoding="utf-8")
-            write_runtime(destination / skill / "shared", root)
-            for document in (destination / skill / "shared").rglob("*.md"):
-                document.write_text(document.read_text(encoding="utf-8").replace("../shared/", "../"), encoding="utf-8")
-    if not nested:
-        write_runtime(destination / "shared", root)
-    verify_bundle(destination, nested, root)
+    for relative, content in snapshot._files:
+        path = destination / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+    snapshot.verify(destination)
+    return snapshot
