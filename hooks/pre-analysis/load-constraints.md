@@ -2,7 +2,7 @@
 hook: pre-analysis
 name: load-constraints
 order: 2
-enabled: true
+enabled: false
 type: markdown
 ---
 

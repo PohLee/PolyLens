@@ -17,11 +17,15 @@ Extract the GO/MODIFY/BLOCK verdict from each lens position.
 ### Step 2: Determine Alignment Status
 
 ```
-If all verdicts are GO → UNANIMOUS (skip to consensus output)
+If all verdicts are GO → UNANIMOUS
 If all verdicts are identical (all MODIFY or all BLOCK) → UNANIMOUS
 If 2+ lenses share a verdict, others differ → SPLIT
 If all verdicts differ → ALL DISAGREE
 ```
+
+UNANIMOUS describes verdict alignment only, not the absence of conflicts.
+Always compare decision framing and non-negotiables, including when all verdicts match.
+Two MODIFY verdicts can require mutually exclusive changes; all GO can rely on incompatible assumptions.
 
 ### Step 3: Build Conflict Map
 
@@ -114,7 +118,7 @@ Prefer stacked markdown blocks over wide tables so the summary stays readable in
 
 ## Special Cases
 
-- **UNANIMOUS GO:** Output "All lenses agree — no conflicts detected. Proceeding to synthesis for final brief."
+- **UNANIMOUS GO:** Complete the conflict map first. Report zero conflicts only when the framing comparison finds none; retain material assumptions in synthesis.
 - **UNANIMOUS BLOCK:** Output "All lenses agree this plan should be blocked. Critical issues: [list]."
 - **Single lens review:** Skip collision entirely — output "Single lens review — no collision analysis applicable."
 - **Near-match wording:** If lenses differ only in phrasing but not in practical action, do not classify it as a conflict.

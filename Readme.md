@@ -2,7 +2,7 @@
 
 > **An AI boardroom in your terminal.** Multi-perspective reasoning for high-stakes decisions.
 
-PolyLens simulates executive-level thinking — CEO, CTO, CPO, and more — to analyze problems, surface disagreements, and resolve them into clear, actionable decisions. Implemented as pure markdown skills with no runtime code or install scripts. Works with any AI coding agent that supports skills.
+PolyLens simulates executive-level thinking — CEO, CTO, CPO, and more — to analyze problems, surface disagreements, and resolve them into clear, actionable decisions. The core is Markdown skills executed by your AI agent; optional dependency-free Python tools provide packaging, plan generation, and deterministic format checks. Bash installers are convenience entrypoints. Multiple lenses are perspectives, not independent evidence or independent expert consensus.
 
 ---
 
@@ -69,7 +69,7 @@ OpenCode is the exception. Its runtime path handling can break sibling traversal
 bash tools/install_opencode.sh
 ```
 
-That command builds `dist/opencode-polylens/` and installs self-contained `polylens/` and `polylens-lens-review/` directories with nested `shared/` assets under `~/.config/opencode/skills/` by default.
+That command builds and verifies a temporary bundle, then installs self-contained `polylens/` and `polylens-lens-review/` directories with nested `shared/` assets under `~/.config/opencode/skills/` by default.
 
 For other common agents, PolyLens now provides direct installer scripts as well:
 
@@ -79,7 +79,9 @@ bash tools/install_codex.sh
 bash tools/install_copilot_workspace.sh /path/to/workspace
 ```
 
-Those scripts build `dist/standard-polylens/` and install the standard sibling bundle expected by Claude Code, Codex, RooCode-style setups, and Copilot workspace skills.
+Those scripts build and verify a temporary standard sibling bundle expected by Claude Code, Codex, RooCode-style setups, and Copilot workspace skills. Installers refuse unowned or linked target directories. On managed updates, previous files are retained under `.polylens-backup-<id>/`; inspect and remove backups yourself when no longer needed. For a legacy/manual install, inspect and move the old directories first rather than letting an installer delete them.
+
+Windows without Bash can use `python tools/install_bundle.py --target <skills-directory> --layout standard` (or `--layout opencode`). Python 3.11+ is required for tools. Standalone release builders still write to `dist/`.
 
 ### Personal Install Via Symlink
 
@@ -164,7 +166,7 @@ Run polylens fully automatic pre-fight review on our pricing strategy
 
 Standard pre-fight stays interactive and stops when a fundamental split needs a user decision. Add language like *"fully automatic"*, *"decide for me"*, or *"without user input"* to force automatic arbitration and a completed recommendation.
 
-Pre-fight uses its embedded registry and lens briefs instead of reading other PolyLens files after activation, with one exception: PR crisis response or reputation recovery must load the bundled PR Crisis Recovery playbook and apply its gates without switching review modes.
+Pre-fight uses a generated embedded registry, lens briefs, and context-loading protocol. It may read the target project's indexed memory and permitted research. PR crisis response must load the PR Crisis Recovery playbook; other playbooks load when explicitly requested, without switching modes.
 
 ### Markdown Artifact Storage
 
@@ -181,6 +183,11 @@ When storing project-specific memory, separate it into:
 - `project-context` for durable facts such as mission, vision, strategic posture, constraints, and non-negotiables
 - `project-preferences` for recurring defaults about how PolyLens should run reviews in that project
 - `decision-history` for prior decisions and rationale that future reviews should respect
+
+To make memory discoverable, use `docs/polylens/memory/index.json` to point each class to its
+current Markdown revision. All modes load one attributed snapshot before lens selection;
+an absent index creates nothing. See [the memory model](docs/project-memory-model.md).
+Create artifact directories on demand when saving; empty directories are not a checkout requirement.
 
 Filename convention:
 
@@ -262,7 +269,7 @@ PolyLens includes a harness system for extended control over the analysis pipeli
 
 ### When Harness Activates
 
-The harness activates when you request features like deep analysis, validation, multi-instance orchestration, or custom hooks. Standard reviews run without harness involvement.
+The optional harness activates for standard reviews when you request deep analysis, validation, multi-instance orchestration, custom hooks, or configure non-default settings. Shipped configs and example hooks are inactive. Pre-fight keeps its own embedded flow, not the standard Harness orchestration.
 
 ### Hooks
 
@@ -336,7 +343,7 @@ Run polylens review with concise output format
 
 ### Validation
 
-Automated checks appended to your decision brief: contract compliance, quality scoring, consistency verification.
+Deterministic checks cover full/partial standard brief structure, verdict alignment, and baseline structure/content drift. The legacy `quality_gate` option produces advisory format hints, not a reasoning-quality score. These checks do not verify facts or prove decision quality; see [behavior evaluation](docs/evaluation.md).
 
 #### User Prompt Examples
 
@@ -360,11 +367,14 @@ python3 tools/harness.py hooks list
 python3 tools/harness.py hooks enable pre-analysis/inject-context
 python3 tools/harness.py hooks disable pre-analysis/inject-context
 
-# Run with harness (AI agent handles this automatically)
+# Generate a plan (the host agent, not this CLI, executes reviews)
 python3 tools/harness.py run "Your problem" --depth deep
 
 # Validate an existing brief
 python3 tools/harness.py validate docs/polylens/reviews/260405_migration_r1.md
+
+# Load indexed target-project memory without modifying it
+python3 tools/harness.py context --project-root /path/to/project
 ```
 
 ### Configuration Files (Optional)
@@ -379,6 +389,12 @@ Create reusable hooks in `hooks/<stage>/`:
 - `hooks/pre-analysis/inject-context.md`
 - `hooks/post-analysis/summarize.md`
 - etc.
+
+Harness configuration uses JSON frontmatter between `---` delimiters; legacy flat hook
+metadata remains supported. Nested YAML is rejected instead of silently flattened. Paths passed
+to `--orchestration`, `--reasoning`, `--validation`, and validation's `--config` select explicit files.
+Relative `baseline_file` paths resolve from the validation config, not the current working directory.
+The CLI never invokes models, evaluates conditions as code, or executes script hooks.
 
 > **Note:** Harness features require Python 3. The core PolyLens review works without it.
 
@@ -425,7 +441,8 @@ You can always override: *"Run CTO + CISO review on this auth system"*
 
 ## 📋 Output: Decision Brief
 
-Every executive review produces a structured 5-section brief:
+A completed executive review produces a structured 5-section brief. When any user decision is
+pending, it produces a partial brief and stops before the completed dashboard:
 
 1. **Individual Positions**: GO / MODIFY / BLOCK verdicts with concerns, endorsements, and non-negotiables.
 2. **Conflict Detection**: Verdict alignment summary plus conflict counts.
@@ -457,7 +474,7 @@ FINAL DECISION
 Ship a pilot now, defer platform-heavy changes to phase two.
 ```
 
-Conflicts are classified into 5 types: **Priority**, **Scope**, **Risk**, **Resource**, and **Fundamental**. Types 1-4 are auto-resolved; Type 5 is escalated to you.
+Conflicts are classified into 5 types: **Priority**, **Scope**, **Risk**, **Resource**, and **Fundamental**. Types 1-4 are resolved only within their escalation thresholds; Type 5 always goes to you in standard mode. In particular, defensible resource estimates differing by more than 2x require your decision. Matching verdicts do not imply zero conflicts, and consensus does not establish high confidence.
 
 ---
 
@@ -577,15 +594,16 @@ Each lens now lives as a shared brief file instead of a public skill entry:
 
 ## ➕ Adding New Lenses
 
-PolyLens is designed for extensibility. Adding a lens requires **three updates**:
+PolyLens is designed for extensibility. Adding a lens requires these steps:
 
 1. **Create the source lens brief:** `lenses/lens-<name>.md`
-2. **Bundle the runtime copy:** `skills/shared/lenses/lens-<name>.md`
-3. **Register it:** Add entry to `prompts/lens-registry.md` with domains, triggers, pairs_with
+2. **Register it:** Add complete metadata to `prompts/lens-registry.md`, including ownership, veto areas, activity, defaults, triggers, and pairs
+3. **Generate runtime projections:** Run `python3 tools/sync_playbooks.py`; it updates the shared runtime and embedded Pre-fight metadata/briefs and selection rules
+4. **Verify:** Run `python3 tools/validate_markdown_contracts.py` and `python3 -m unittest discover -s tests -v`
 
 The validator checks that the source and bundled copies stay identical.
 
-That's it. No changes to orchestrators or engines. The selection algorithm picks up new lenses automatically.
+Edit the registry's selection algorithm once; generated sections in entrypoints and orchestrators must not be edited manually. Pre-fight remains self-contained without maintaining another hand-written inventory.
 
 ---
 
@@ -610,7 +628,7 @@ Contributions welcome:
 
 PolyLens includes a repo-native validator that checks the working markdown contract across the public routers, internal orchestrators, shared lens library, engines, bundled runtime copies, and output templates.
 
-When you change files under `prompts/playbooks/` or `prompts/shared-playbooks.md`, resync the bundled runtime copy first:
+When you change source prompts, lenses, engines, orchestrators, hooks, Harness configuration, or runtime tools, regenerate all runtime copies and embedded projections first:
 
 ```bash
 python3 tools/sync_playbooks.py
@@ -618,6 +636,8 @@ python3 tools/sync_playbooks.py
 
 ```bash
 python3 tools/validate_markdown_contracts.py
+python3 tools/sync_playbooks.py --check
+python3 -m unittest discover -s tests -v
 ```
 
 The command exits non-zero when shared fields, lens inventory, or orchestration rules drift out of sync. The same check also runs automatically in GitHub Actions on pushes and pull requests.

@@ -12,10 +12,12 @@ Use the structured decision-framing fields as the primary synthesis input. Use r
 
 ## Happy Path: No Conflicts
 
-If the collision engine reports UNANIMOUS (no conflicts detected):
-- Proceed directly to Output Assembly with the original plan unchanged
+Only take this path when the canonical conflict count is zero, not merely when alignment is UNANIMOUS:
+- Retain compatible required modifications even when every verdict is MODIFY
+- A unanimous BLOCK still blocks execution; report the reasons and remediation, not permission to proceed
+- Proceed to Output Assembly after recording execution blockers, required modifications, material assumptions, and pending user decisions separately
 - Set CONFLICTS RESOLVED: 0 of 0
-- Set Confidence Level: High
+- Assign confidence using Confidence Level Assignment below; consensus is not evidence
 
 ## Resolution Strategies by Conflict Type
 
@@ -52,7 +54,8 @@ Decision rule:
 1. Is the resource commitment reversible? (Can we reassign people/budget later?)
    - Yes → go with the smaller estimate, can adjust later
    - No → go with the larger estimate, under-commitment is more costly
-2. If both positions are defensible and gap > 2x → split the difference with milestones
+2. If both positions are defensible and gap > 2x → escalate to user using the decision split format; this overrides the reversible/irreversible shortcut above
+3. Keep it classified as Type 4, but treat the unresolved escalation exactly like any pending user decision: partial brief only, then stop
 
 ### Type 5 (Fundamental) → Escalate to User
 
@@ -65,7 +68,7 @@ Decision rule:
 
 ## Output Assembly
 
-After resolving all non-Type-5 conflicts, assemble the final brief. If any Type 5 conflict still requires a user decision, assemble only the partial brief and stop.
+After resolving conflicts, assemble the final brief only when no user decision is pending. A Type 4 escalation also requires a partial brief and a stop.
 
 ### Section 4: Final Alignment After Resolution
 
@@ -114,7 +117,7 @@ RISK REGISTER
   Mitigation: [plan]
 ```
 
-If user input is still required, replace Section 4 with the `DECISION SPLIT (AWAITING USER INPUT)` format from `prompts/output-template.md`, keep Sections 1-3, and stop before producing a completed Section 5 dashboard.
+If user input is still required for any conflict type, replace Section 4 with the `DECISION SPLIT (AWAITING USER INPUT)` format from `prompts/output-template.md`, keep Sections 1-3, and stop before producing a completed Section 5 dashboard.
 
 ### Section 5: Final Summary Dashboard
 
@@ -131,6 +134,6 @@ For 2-4 lenses, include one row per selected lens only.
 
 ## Confidence Level Assignment
 
-- **High:** Execution path is clear, no user decision is pending, no material assumptions remain unresolved, and no accepted high-severity risk lacks mitigation
+- **High:** Execution path is clear, no execution blocker or user decision is pending, no material assumptions remain unresolved, and no accepted high-severity risk lacks mitigation
 - **Medium:** Some disagreement, deferred decisions, or moderate assumptions remain, but the plan can proceed with clear owners and guardrails
 - **Low:** A user decision is still pending, high-severity risk is accepted with weak mitigation, or major assumptions materially affect execution

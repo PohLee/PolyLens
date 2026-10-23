@@ -16,6 +16,8 @@ Read the problem/plan being reviewed. Identify:
 - What is the context (codebase, branch, constraints)?
 - Are there specific lenses the user has requested?
 
+Before lens selection, read and follow `../shared/prompts/project-context.md` to load an attributed snapshot from the target project's indexed memory.
+
 For PR crisis response or reputation recovery, read and apply `../shared/playbooks/pr-crisis-recovery.md` before forming lens positions. Its gates are mandatory even when research is disabled. Carry its evidence ledger and response checks through the existing brief sections.
 
 ### Step 0.5: Harness Execution (if active)
@@ -27,7 +29,8 @@ For each enabled hook in the registry, read the hook file from `../shared/hooks/
 Inject the hook's content (everything after the frontmatter) into the prompt at the appropriate stage.
 
 **Apply Reasoning Controls:**
-If `../shared/harness/reasoning.md` exists:
+Use the emitted plan and explicit current-request overrides as the authoritative configuration.
+If running without Python, read the JSON frontmatter directly. If reasoning controls are active:
 - Set analysis depth per the config (surface/standard/deep)
 - Inject constraints into the prompt before lens selection
 - Apply output format settings
@@ -35,16 +38,23 @@ If `../shared/harness/reasoning.md` exists:
 **Execute Orchestration:**
 If `../shared/harness/orchestration.md` has multiple instances:
 - Run instances in the specified order (sequential mode)
+- In parallel/conditional mode, execute only instances whose dependencies completed; honor host concurrency limits
 - For each instance, apply its specific lenses, hooks, and reasoning settings
 - Use previous instance output as context for dependent instances
 - Evaluate conditions before running conditional instances
+- Conditions are plain language, not code to eval; if a condition cannot be determined, report and stop that branch
 
 **Run Validation:**
 After producing the decision brief, if `../shared/harness/validation.md` has validation enabled:
-- Run contract check (verify all 5 sections present, verdicts formatted)
-- Run quality gate (score 0-10 based on depth, evidence, completeness)
-- Run consistency check (flag contradictory facts between lenses)
+- Run the contract check only for full standard briefs (complete or partial); concise/custom output needs a separate format contract
+- Treat the legacy quality_gate setting as advisory format hints, never a reasoning-quality score
+- Run deterministic consistency checks for verdict alignment; factual verification requires evidence review
 - Append validation report to the brief
+
+For deterministic checks, save to a user-authorized artifact or temporary file and invoke the
+bundled `../shared/tools/harness.py validate <absolute-brief-path>` with the selected validation
+configuration. A nonzero exit is a failed check, not a completed validation. Do not run contract
+checks on the validation report itself. Manual evidence review remains separate.
 
 **Hook Injection Format:**
 When injecting a hook's content, prefix it with:
@@ -61,20 +71,23 @@ Read the bundled lens registry at `../shared/prompts/lens-registry.md`.
 
 **If the user specified lenses:** Use those lenses. Respect explicit user choice.
 
-**If no lenses specified:** Run the selection algorithm:
-1. Filter active lenses: Only consider lenses where `active: true`
-2. Identify the primary decision anchor and separate it from supporting constraints such as budget, timeline, team size, compliance, or risk
-3. Check which lens role owns that decision class in the registry. Owner lenses should be selected before adjacent lenses that only judge consequences of the decision.
-4. Score explicit trigger phrase matches at +2 and domain/theme matches at +1
-5. Downweight supporting constraints unless the user explicitly asks to optimize for them or they are central to the decision itself
-6. If the prompt explicitly touches a veto area for a lens, include that lens or explain why it is being deferred
-7. Boost scores for lenses in `pairs_with` of top-scoring lenses (+0.5, only if active)
-8. If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, usually include CEO with CTO.
-9. Never let YC, CFO, or other adjacent lenses displace the primary owner of the decision anchor when that owner is active and clearly applicable
-10. Prefer a balanced set of 2-4 lenses that covers the anchor decision and only the highest-consequence secondary tradeoffs present in the prompt
-11. Do not add finance, security, or operations lenses solely because those concerns exist in the background; require explicit evidence that they are decision-driving
-12. Break ties deterministically in this order: ownership match, decision-anchor match, explicit user wording match, trigger score, `default: true`, registry order
-13. If the prompt is ambiguous and no lens scores above 2, use the default lenses marked in the registry
+**If no lenses specified:** Apply the authoritative selection contract:
+
+<!-- BEGIN GENERATED SELECTION -->
+1. **Filter active lenses:** Only consider lenses where `active: true`
+2. **Identify the decision anchor:** Separate the primary decision being asked from supporting constraints. The primary decision should drive the first lens selection.
+3. **Promote decision owners first:** If the anchor matches a lens's `owns_decisions`, that lens should usually be selected before adjacent lenses that only evaluate consequences of the decision.
+4. **Score explicit wording:** Exact or near-exact matches against `triggers` score +2; domain/theme matches score +1
+5. **Downweight ambient constraints:** Budget, timeline, team size, compliance, or risk details count as supporting signals unless the user explicitly asks to optimize for them or they are central to the decision itself
+6. **Apply veto coverage:** If the prompt explicitly touches a lens's `veto_on` area, include that lens or state why it is being deferred.
+7. **Rank by relevance:** Sum the scores and keep a note of which user constraints each lens covers, but never let an adjacent lens displace the primary owner of the decision anchor.
+8. **Apply pairing rules:** If a top lens has `pairs_with` recommendations, boost those lenses' scores by 0.5 (only if they are also active)
+9. **Promote strategic complement when needed:** If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, this usually means pairing CTO with CEO.
+10. **Prefer coverage without drift:** For a multi-lens review, select 2-4 lenses covering the main decision and its highest-consequence tradeoffs. For a focused review, Select exactly one lens: apply the same ranking, treat veto coverage as eligibility, and recommend a multi-lens review if one lens cannot cover the decision. Pairing and strategic complements do not add lenses in focused mode.
+11. **Cap secondary lenses:** After the anchor lens, its owner, and any necessary strategy complement, add supporting lenses only when they introduce a distinct decision axis with explicit evidence. Do not add finance, security, or operations lenses solely because those concerns exist in the background.
+12. **Break ties deterministically:** Use this order: stronger ownership match, stronger decision-anchor match, more direct user wording match, stronger trigger match, `default: true`, registry order
+13. **Fallback:** Only if all scores < 2, use active lenses marked `default: true`; exactly 2 is a strong match. In focused mode choose the highest-ranked default lens only.
+<!-- END GENERATED SELECTION -->
 
 Pricing guidance: for pricing, packaging, monetization, or sales-motion decisions, include CRO by default. Add CEO for strategic posture, CFO for unit economics or runway, CPO for packaging or product tier design, and YC only when startup simplicity or fundraising framing is explicitly part of the question.
 
@@ -107,7 +120,7 @@ Output the Conflict Detection Summary.
 
 Run the synthesis engine by reading `../shared/engines/synthesis.md` and following its process:
 1. Apply resolution strategies based on conflict type
-2. For Type 5 (Fundamental) conflicts, output the decision split format and stop for user input
+2. For Type 5 (Fundamental) conflicts or any escalation threshold in the conflict taxonomy (including Type 4 resource gaps > 2x with defensible estimates), output the decision split format and stop for user input
 3. Assemble the Final Alignment section only when no user decision is pending
 4. Assemble the Final Summary Dashboard only when the brief is complete
 
@@ -132,7 +145,7 @@ If the user asks to save, export, write, or generate the brief as a markdown fil
 
 - **Problem too vague:** Ask clarifying questions before running lenses
 - **No matching lenses:** Fall back to the default set from the registry
-- **All lenses agree:** Record a no-conflict collision summary, then output a consensus brief
+- **All lenses agree:** Complete framing comparison; matching verdicts alone do not establish zero conflicts or high confidence
 - **Unresolvable conflict:** Escalate to user with split recommendations
 - **Context window limits:** Run lenses sequentially, summarize between steps
 - **Ambiguous tie between lenses:** Use deterministic tie-break rules; do not pick arbitrarily

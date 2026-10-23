@@ -5,6 +5,9 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from lens_contract import parse_registry, projection_errors
+from runtime_bundle import check_runtime
+from harness import HookRegistry, load_orchestration_config, load_reasoning_config, load_validation_config
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -75,38 +78,11 @@ def normalize_bundled_prompt_refs(text: str) -> str:
     )
 
 
-def parse_registry(text: str) -> tuple[list[str], dict[str, dict[str, str]]]:
-    headings = list(
-        re.finditer(r"^###\s+([A-Z][A-Za-z]*)\s+—\s+.+$", text, flags=re.MULTILINE)
-    )
-    order: list[str] = []
-    entries: dict[str, dict[str, str]] = {}
-
-    for index, match in enumerate(headings):
-        name = match.group(1)
-        start = match.end()
-        end = headings[index + 1].start() if index + 1 < len(headings) else len(text)
-        block = text[start:end]
-        fields = {}
-        for key in [
-            "focus",
-            "domains",
-            "triggers",
-            "owns_decisions",
-            "veto_on",
-            "pairs_with",
-            "default",
-            "active",
-            "bias",
-            "verdict_style",
-        ]:
-            field_match = re.search(rf"- \*\*{re.escape(key)}:\*\*\s*(.+)", block)
-            if field_match:
-                fields[key] = field_match.group(1).strip()
-        order.append(name)
-        entries[name] = fields
-
-    return order, entries
+def validate_lens_projections(errors: list[str]) -> None:
+    try:
+        errors.extend(projection_errors(ROOT))
+    except (ValueError, KeyError, IndexError) as error:
+        errors.append(f"Cannot generate lens projections: {error}")
 
 
 def validate_registry(errors: list[str]) -> list[str]:
@@ -114,6 +90,7 @@ def validate_registry(errors: list[str]) -> list[str]:
     order, entries = parse_registry(text)
 
     require(bool(order), f"{REGISTRY_PATH.relative_to(ROOT)}: no lens entries found", errors)
+    require(len(order) == len(set(order)), "duplicate lens IDs in registry", errors)
     require(
         "Selection should be deterministic." in text,
         f"{REGISTRY_PATH.relative_to(ROOT)}: missing deterministic selection guidance",
@@ -127,6 +104,8 @@ def validate_registry(errors: list[str]) -> list[str]:
 
     for lens_name in order:
         fields = entries[lens_name]
+        for boolean in ("active", "default"):
+            require(fields.get(boolean) in ("true", "false"), f"{lens_name}: {boolean} must be true or false", errors)
         for required_field in [
             "focus",
             "domains",
@@ -177,9 +156,10 @@ def validate_lens_brief(lens_name: str, errors: list[str]) -> None:
         errors,
     )
 
+    position = re.search(rf"---BEGIN {re.escape(lens_name)} POSITION---(.*?)---END {re.escape(lens_name)} POSITION---", text, re.DOTALL)
     for required_field in LENS_REQUIRED_FIELDS:
         require(
-            required_field in text,
+            position is not None and required_field in position.group(1),
             f"{lens_path.relative_to(ROOT)}: missing '{required_field}' in lens output contract",
             errors,
         )
@@ -453,11 +433,6 @@ def validate_orchestrators(errors: list[str]) -> None:
 
     for required_path in [
         ROOT / "docs" / "polylens" / "README.md",
-        ROOT / "docs" / "polylens" / "memory",
-        ROOT / "docs" / "polylens" / "notes",
-        ROOT / "docs" / "polylens" / "plans",
-        ROOT / "docs" / "polylens" / "pre-fight",
-        ROOT / "docs" / "polylens" / "reviews",
     ]:
         require(
             required_path.exists(),
@@ -522,6 +497,23 @@ def validate_pr_crisis_recovery(errors: list[str]) -> None:
         )
 
 
+def validate_decision_protocol(errors: list[str]) -> None:
+    """Guard protocol invariants; actual model behavior is evaluated separately."""
+    rules = {
+        COLLISION_PATH: ["UNANIMOUS describes verdict alignment only", "Always compare decision framing and non-negotiables"],
+        SYNTHESIS_PATH: ["canonical conflict count is zero", "Retain compatible required modifications", "A unanimous BLOCK still blocks execution", "gap > 2x → escalate to user", "no execution blocker or user decision is pending"],
+        OUTPUT_TEMPLATE_PATH: ["UNANIMOUS describes verdict alignment only", "including Type 4 resource escalation or Type 5"],
+        PRE_FIGHT_PATH: ["Resource evidence gate:", "Interactive mode escalates", "HOLD an irreversible commitment", "This gate takes precedence"],
+    }
+    for path, required in rules.items():
+        text = read_text(path)
+        for rule in required:
+            require(rule in text, f"{path.relative_to(ROOT)}: missing decision invariant '{rule}'", errors)
+    text = read_text(SYNTHESIS_PATH)
+    require("split the difference with milestones" not in text, "synthesis contradicts Type 4 escalation threshold", errors)
+    require("Set Confidence Level: High" not in text, "synthesis must not assign High solely from consensus", errors)
+
+
 def validate_hook_frontmatter(hook_path: Path, errors: list[str]) -> None:
     """Validate that a hook file has correct frontmatter."""
     try:
@@ -566,12 +558,21 @@ def validate_harness_config(config_path: Path, errors: list[str]) -> None:
     if not text.startswith("---"):
         errors.append(f"{config_path.relative_to(ROOT)}: missing frontmatter")
         return
+    loaders = {"orchestration.md": load_orchestration_config, "reasoning.md": load_reasoning_config, "validation.md": load_validation_config}
+    try:
+        loaders[config_path.name](config_path)
+    except (KeyError, ValueError, TypeError, OSError) as error:
+        errors.append(f"{config_path.relative_to(ROOT)}: {error}")
 
 
 def validate_hooks(errors: list[str]) -> None:
     """Validate all hook files."""
     if not HOOKS_DIR.exists():
         return
+    try:
+        HookRegistry.load(HOOKS_DIR)
+    except (ValueError, TypeError, OSError) as error:
+        errors.append(f"Invalid hook registry: {error}")
 
     for stage in HOOK_STAGES:
         stage_dir = HOOKS_DIR / stage
@@ -636,17 +637,28 @@ def main() -> int:
         return 1
 
     active_lenses = validate_registry(errors)
-    validate_skill_inventory(active_lenses, errors)
-    for lens_name in active_lenses:
+    validate_lens_projections(errors)
+    all_lenses, _ = parse_registry(read_text(REGISTRY_PATH))
+    validate_skill_inventory(all_lenses, errors)
+    for lens_name in all_lenses:
         validate_lens_brief(lens_name, errors)
     validate_output_template(errors)
     validate_bundled_shared_docs(errors)
     validate_collision(errors)
     validate_synthesis(errors)
+    validate_decision_protocol(errors)
     validate_orchestrators(errors)
     validate_pr_crisis_recovery(errors)
     validate_hooks(errors)
     validate_harness(errors)
+    errors.extend(check_runtime(SHARED_DIR, ROOT))
+    scenarios_path = ROOT / "tests/fixtures/decision-behavior.md"
+    if scenarios_path.is_file():
+        scenarios = read_text(scenarios_path)
+        for number in range(1, 11):
+            require(f"## DB-{number:02d} —" in scenarios, f"missing behavior scenario DB-{number:02d}", errors)
+    else:
+        errors.append("missing decision behavior scenarios (these are not model execution results)")
 
     if errors:
         print("PolyLens markdown contract validation failed:\n", file=sys.stderr)

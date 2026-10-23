@@ -1,50 +1,70 @@
 #!/usr/bin/env python3
-"""PolyLens Harness Engine — Hook registry, orchestration, reasoning control, validation."""
+"""PolyLens plan generator and format validator; the host agent executes the plan."""
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 HOOKS_DIR = ROOT / "hooks"
 HARNESS_DIR = ROOT / "harness"
-SHARED_HOOKS_DIR = ROOT / "skills" / "shared" / "hooks"
-SHARED_HARNESS_DIR = ROOT / "skills" / "shared" / "harness"
+HOOK_STAGES = ("pre-analysis", "lens-select", "review", "collision", "synthesis", "post-analysis")
+
+
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"Duplicate JSON key: {key}")
+        result[key] = value
+    return result
 
 
 # ─── Frontmatter Parsing ─────────────────────────────────────────────
 
 def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
-    """Parse YAML-like frontmatter from markdown file.
+    """Read JSON frontmatter or legacy flat hook metadata, without a YAML dependency.
 
-    Returns (metadata_dict, content_body).
-    Uses simple key: value parsing — no external YAML dependency.
+    Nested YAML is deliberately rejected: indentation must never be silently lost.
     """
+    text = text.replace("\r\n", "\n")
     match = re.match(r"^---\n(.*?)\n---\n(.*)", text, re.DOTALL)
     if not match:
         return {}, text
 
+    raw = match.group(1)
+    if raw.lstrip().startswith("{"):
+        metadata = json.loads(raw, object_pairs_hook=_unique_object)
+        if not isinstance(metadata, dict):
+            raise ValueError("Frontmatter must be a JSON object")
+        return metadata, match.group(2).strip()
     metadata = {}
     for line in match.group(1).splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
+        if not line.strip() or line.lstrip().startswith("#"):
             continue
-        if ":" in line:
-            key, _, value = line.partition(":")
-            key = key.strip()
-            value = value.strip()
-            metadata[key] = _parse_value(value)
+        if line[0].isspace() or ":" not in line or line.startswith("-"):
+            raise ValueError("Nested YAML is unsupported; use JSON frontmatter for Harness configuration")
+        key, _, value = line.partition(":")
+        key = key.strip()
+        if not value.strip() or key in metadata:
+            raise ValueError("Empty or duplicate metadata key; use JSON frontmatter for nested configuration")
+        metadata[key.strip()] = _parse_value(value.strip())
 
     return metadata, match.group(2).strip()
 
 
 def _parse_value(value: str) -> Any:
     """Parse a frontmatter value string into appropriate type."""
+    if value.startswith('"'):
+        return json.loads(value)
+    if value.startswith("'") and value.endswith("'"):
+        return value[1:-1]
     if value.startswith("[") and value.endswith("]"):
         items = value[1:-1].split(",")
         return [item.strip() for item in items if item.strip()]
@@ -103,19 +123,22 @@ class HookRegistry:
     @classmethod
     def _load_hook(cls, file_path: Path) -> HookDef | None:
         """Load a single hook from a markdown file."""
-        try:
-            text = file_path.read_text(encoding="utf-8")
-        except Exception:
-            return None
+        text = file_path.read_text(encoding="utf-8")
 
         metadata, content = parse_frontmatter(text)
 
         stage = metadata.get("hook")
         name = metadata.get("name")
         if not stage or not name:
-            return None
+            raise ValueError(f"{file_path}: hook and name are required")
+        if not isinstance(name, str) or not re.fullmatch(r"[a-z][a-z0-9-]*", name):
+            raise ValueError(f"{file_path}: invalid hook name")
 
         hook_type = metadata.get("type", "markdown")
+        if stage not in HOOK_STAGES or stage != file_path.parent.name or hook_type not in ("markdown", "script"):
+            raise ValueError(f"{file_path}: invalid hook stage or type")
+        if type(metadata.get("enabled", False)) is not bool or type(metadata.get("order", 99)) is not int:
+            raise ValueError(f"{file_path}: enabled must be boolean and order must be integer")
         script_path = None
         if hook_type == "script":
             script_val = metadata.get("script")
@@ -126,7 +149,7 @@ class HookRegistry:
             stage=str(stage),
             name=str(name),
             order=int(metadata.get("order", 99)),
-            enabled=bool(metadata.get("enabled", True)),
+            enabled=metadata.get("enabled", False),
             hook_type=str(hook_type),
             content=content,
             file_path=file_path,
@@ -159,9 +182,20 @@ class HookRegistry:
         for h in self.hooks:
             if h.stage == stage and h.name == name:
                 text = h.file_path.read_text(encoding="utf-8")
-                old = f"enabled: {str(h.enabled).lower()}"
                 new = f"enabled: {str(enabled).lower()}"
-                text = text.replace(old, new, 1)
+                match = re.match(r"^---\n(.*?)\n---\n(.*)", text, re.DOTALL)
+                if not match:
+                    raise ValueError("Hook must contain frontmatter")
+                raw, content = match.groups()
+                if raw.lstrip().startswith("{"):
+                    metadata, _ = parse_frontmatter(text)
+                    metadata["enabled"] = enabled
+                    raw = json.dumps(metadata, indent=2)
+                else:
+                    raw, count = re.subn(r"^enabled[ \t]*:[^\n]*$", new, raw, count=1, flags=re.MULTILINE)
+                    if not count:
+                        raw += "\n" + new
+                text = "---\n" + raw + "\n---\n" + content
                 h.file_path.write_text(text, encoding="utf-8")
                 h.enabled = enabled
                 return True
@@ -183,9 +217,9 @@ class ReasoningConfig:
 
 @dataclass
 class ValidationConfig:
-    contract: bool = True
-    quality_gate: bool = True
-    consistency: bool = True
+    contract: bool = False
+    quality_gate: bool = False
+    consistency: bool = False
     regression: bool = False
     baseline_file: str | None = None
 
@@ -206,123 +240,136 @@ class OrchestrationConfig:
     instances: list[InstanceConfig] = field(default_factory=list)
 
 
-def load_orchestration_config(path: Path | None = None) -> OrchestrationConfig:
-    """Load orchestration config from markdown file."""
+def _object(value: Any, keys: set[str], label: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ValueError(f"{label} must be an object")
+    unknown = set(value) - keys
+    if unknown:
+        raise ValueError(f"Unknown {label} fields: {sorted(unknown)}")
+    return value
+
+
+def _strings(value: Any, label: str) -> list[str]:
+    if not isinstance(value, list) or not all(isinstance(v, str) and v.strip() for v in value):
+        raise ValueError(f"{label} must be a list of nonempty strings")
+    return value
+
+
+def _config(path: Path | None, filename: str) -> dict[str, Any]:
     if path is None:
-        path = HARNESS_DIR / "orchestration.md"
-    if not path.exists():
-        return OrchestrationConfig()
+        path = HARNESS_DIR / filename
+        if not path.exists():
+            return {}
+    metadata, _ = parse_frontmatter(path.read_text(encoding="utf-8"))
+    if not metadata:
+        raise ValueError(f"{path}: missing configuration frontmatter")
+    return metadata
 
-    text = path.read_text(encoding="utf-8")
-    metadata, _ = parse_frontmatter(text)
 
-    config = OrchestrationConfig(mode=str(metadata.get("mode", "sequential")))
+def _reasoning(value: Any) -> ReasoningConfig:
+    r = _object(value, {"depth", "min_lenses", "max_lenses", "constraints", "output"}, "reasoning")
+    output = _object(r.get("output", {}), {"format", "include_sections", "custom_template"}, "output")
+    config = ReasoningConfig(
+        depth=r.get("depth", "standard"), min_lenses=r.get("min_lenses", 2), max_lenses=r.get("max_lenses", 4),
+        constraints=_strings(r.get("constraints", []), "constraints"), output_format=output.get("format", "full"),
+        include_sections=_strings(output.get("include_sections", ["all"]), "include_sections"),
+        custom_template=output.get("custom_template"),
+    )
+    if config.depth not in ("surface", "standard", "deep"):
+        raise ValueError("Invalid reasoning depth")
+    if type(config.min_lenses) is not int or type(config.max_lenses) is not int or not 2 <= config.min_lenses <= config.max_lenses <= 4:
+        raise ValueError("Require 2 <= min_lenses <= max_lenses <= 4")
+    if config.output_format not in ("full", "concise", "dashboard-only"):
+        raise ValueError("Invalid output format")
+    if config.custom_template is not None and not isinstance(config.custom_template, str):
+        raise ValueError("custom_template must be a path string or null")
+    return config
 
-    instances_data = metadata.get("instances", [])
-    if isinstance(instances_data, list):
-        for inst in instances_data:
-            if isinstance(inst, dict):
-                reasoning = ReasoningConfig()
-                if "reasoning" in inst and isinstance(inst["reasoning"], dict):
-                    r = inst["reasoning"]
-                    reasoning = ReasoningConfig(
-                        depth=str(r.get("depth", "standard")),
-                        min_lenses=int(r.get("min_lenses", 2)),
-                        max_lenses=int(r.get("max_lenses", 4)),
-                        constraints=r.get("constraints", []) or [],
-                    )
-                config.instances.append(InstanceConfig(
-                    name=str(inst.get("name", "unnamed")),
-                    lenses=inst.get("lenses", []) or [],
-                    depends_on=inst.get("depends_on"),
-                    condition=inst.get("condition"),
-                    reasoning=reasoning,
-                    hooks=inst.get("hooks", {}) or {},
-                ))
 
+def load_orchestration_config(path: Path | None = None) -> OrchestrationConfig:
+    data = _object(_config(path, "orchestration.md"), {"mode", "instances"}, "orchestration")
+    config = OrchestrationConfig(mode=data.get("mode", "sequential"))
+    if config.mode not in ("sequential", "parallel", "conditional"):
+        raise ValueError("Invalid orchestration mode")
+    instances = data.get("instances", [])
+    if not isinstance(instances, list):
+        raise ValueError("instances must be a list")
+    for value in instances:
+        inst = _object(value, {"name", "lenses", "depends_on", "condition", "reasoning", "hooks"}, "instance")
+        name = inst.get("name")
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Each instance requires a nonempty name")
+        for key in ("depends_on", "condition"):
+            if inst.get(key) is not None and (not isinstance(inst[key], str) or not inst[key].strip()):
+                raise ValueError(f"{key} must be a nonempty string or null")
+        hooks = _object(inst.get("hooks", {}), set(HOOK_STAGES), "hooks")
+        for stage, names in hooks.items():
+            _strings(names, f"hooks.{stage}")
+        config.instances.append(InstanceConfig(name=name, lenses=_strings(inst.get("lenses", []), "lenses"),
+            depends_on=inst.get("depends_on"), condition=inst.get("condition"), reasoning=_reasoning(inst.get("reasoning", {})), hooks=hooks))
+    names = [i.name for i in config.instances]
+    if len(set(names)) != len(names):
+        raise ValueError("Instance names must be unique")
+    dependencies = {i.name: i.depends_on for i in config.instances}
+    for instance in config.instances:
+        seen = {instance.name}
+        dependency = instance.depends_on
+        while dependency is not None:
+            if dependency not in dependencies or dependency in seen:
+                raise ValueError("Unknown or cyclic instance dependency")
+            seen.add(dependency)
+            dependency = dependencies[dependency]
+        if config.mode == "sequential" and instance.depends_on and names.index(instance.depends_on) >= names.index(instance.name):
+            raise ValueError("Sequential dependencies must appear before their dependents")
     return config
 
 
 def load_reasoning_config(path: Path | None = None) -> ReasoningConfig:
-    """Load reasoning config from markdown file."""
-    if path is None:
-        path = HARNESS_DIR / "reasoning.md"
-    if not path.exists():
-        return ReasoningConfig()
-
-    text = path.read_text(encoding="utf-8")
-    metadata, _ = parse_frontmatter(text)
-
-    reasoning = metadata.get("reasoning", {})
-    if not isinstance(reasoning, dict):
-        return ReasoningConfig()
-
-    output = reasoning.get("output", {})
-    if not isinstance(output, dict):
-        output = {}
-
-    return ReasoningConfig(
-        depth=str(reasoning.get("depth", "standard")),
-        min_lenses=int(reasoning.get("min_lenses", 2)),
-        max_lenses=int(reasoning.get("max_lenses", 4)),
-        constraints=reasoning.get("constraints", []) or [],
-        output_format=str(output.get("format", "full")),
-        include_sections=output.get("include_sections", ["all"]) or ["all"],
-        custom_template=output.get("custom_template"),
-    )
+    data = _object(_config(path, "reasoning.md"), {"reasoning"}, "configuration")
+    return _reasoning(data.get("reasoning", {}))
 
 
 def load_validation_config(path: Path | None = None) -> ValidationConfig:
-    """Load validation config from markdown file."""
-    if path is None:
-        path = HARNESS_DIR / "validation.md"
-    if not path.exists():
-        return ValidationConfig()
+    data = _object(_config(path, "validation.md"), {"validation"}, "configuration")
+    values = _object(data.get("validation", {}), {"contract", "quality_gate", "consistency", "regression", "baseline_file"}, "validation")
+    for key in ("contract", "quality_gate", "consistency", "regression"):
+        if key in values and type(values[key]) is not bool:
+            raise ValueError(f"validation.{key} must be a boolean")
+    baseline = values.get("baseline_file")
+    if baseline is not None and (not isinstance(baseline, str) or not baseline.strip()):
+        raise ValueError("baseline_file must be a nonempty path string or null")
+    if baseline:
+        base = path.parent if path else HARNESS_DIR
+        values["baseline_file"] = str((base / baseline).resolve())
+    return ValidationConfig(**values)
 
-    text = path.read_text(encoding="utf-8")
-    metadata, _ = parse_frontmatter(text)
 
-    validation = metadata.get("validation", {})
-    if not isinstance(validation, dict):
-        return ValidationConfig()
-
-    return ValidationConfig(
-        contract=bool(validation.get("contract", True)),
-        quality_gate=bool(validation.get("quality_gate", True)),
-        consistency=bool(validation.get("consistency", True)),
-        regression=bool(validation.get("regression", False)),
-        baseline_file=validation.get("baseline_file"),
-    )
+def load_project_context(project_root: Path) -> dict[str, Any]:
+    """Read only explicitly indexed project memory; never guess the newest revision."""
+    root = project_root.resolve(strict=True)
+    memory = root / "docs/polylens/memory"
+    index = memory / "index.json"
+    classes = {"project-context", "project-preferences", "decision-history"}
+    sources = {}
+    if index.exists():
+        if not index.resolve().is_relative_to(root):
+            raise ValueError("Memory index must stay inside the target project")
+        data = _object(json.loads(index.read_text(encoding="utf-8"), object_pairs_hook=_unique_object), classes, "memory index")
+        for name, value in data.items():
+            if not isinstance(value, str) or not value.strip() or Path(value).is_absolute():
+                raise ValueError("Memory references must be relative Markdown paths")
+            path = (memory / value).resolve(strict=True)
+            if not path.is_relative_to(memory.resolve()) or not path.is_relative_to(root) or path.suffix.lower() != ".md":
+                raise ValueError("Memory reference must stay inside the project's memory directory")
+            sources[name] = {"path": path.relative_to(root).as_posix(), "content": path.read_text(encoding="utf-8")}
+    return {"project_root": str(root), "status": "loaded" if index.exists() else "absent", "sources": sources, "missing_classes": sorted(classes - sources.keys())}
 
 
 # ─── CLI Interface ───────────────────────────────────────────────────
 
-def print_usage() -> None:
-    """Print CLI usage information."""
-    print("""PolyLens Harness Engine
-
-Usage:
-  python3 tools/harness.py run "problem" [--orchestration path] [--depth level]
-  python3 tools/harness.py validate [brief_path]
-  python3 tools/harness.py hooks list
-  python3 tools/harness.py hooks enable <stage>/<name>
-  python3 tools/harness.py hooks disable <stage>/<name>
-
-Commands:
-  run       Run PolyLens analysis with harness (invokes AI agent)
-  validate  Validate an existing decision brief
-  hooks     Manage hook registry
-
-Options:
-  --orchestration   Path to orchestration config
-  --depth           Analysis depth: surface, standard, deep
-  --help            Show this help message""")
-
-
 def cmd_hooks(args: list[str]) -> int:
     """Handle hooks subcommand."""
     if not args:
-        print_usage()
         return 1
 
     action = args[0]
@@ -360,21 +407,6 @@ def cmd_hooks(args: list[str]) -> int:
     return 1
 
 
-def cmd_validate(args: list[str]) -> int:
-    """Handle validate subcommand."""
-    brief_path = None
-    if args:
-        brief_path = Path(args[0])
-        if not brief_path.exists():
-            print(f"Error: file not found: {brief_path}")
-            return 1
-
-    config = load_validation_config()
-    results = run_validation(brief_path, config)
-    print_validation_report(results)
-    return 0
-
-
 def run_validation(brief_path: Path | None, config: ValidationConfig) -> dict[str, Any]:
     """Run validation checks on a brief file."""
     results: dict[str, Any] = {}
@@ -397,7 +429,7 @@ def run_validation(brief_path: Path | None, config: ValidationConfig) -> dict[st
 
 
 def validate_contract(brief_path: Path | None) -> dict[str, Any]:
-    """Validate that a brief has all required sections."""
+    """Validate structure only; never claim that a well-formed recommendation is correct."""
     if brief_path is None:
         return {"passed": False, "note": "No brief file provided"}
 
@@ -406,66 +438,69 @@ def validate_contract(brief_path: Path | None) -> dict[str, Any]:
     except Exception as e:
         return {"passed": False, "note": f"Cannot read file: {e}"}
 
-    required_sections = [
-        "VERDICT ALIGNMENT",
-        "CONFLICT MAP",
-        "FINAL DECISION",
-        "FINAL SUMMARY DASHBOARD",
+    headings = _headings(text)
+    partial = "DECISION SPLIT (AWAITING USER INPUT)" in headings
+    required = ["VERDICT ALIGNMENT", "CONFLICT MAP"]
+    required += ["DECISION SPLIT (AWAITING USER INPUT)"] if partial else [
+        "ALIGNED PLAN", "ASSUMPTIONS / UNKNOWNS", "EXECUTIVE ALIGNMENT REVIEW - COMPLETION SUMMARY",
+        "FINAL DECISION", "KEY TRADEOFFS", "RISKS ACCEPTED", "MITIGATION PLAN", "DISSENTING OPINIONS", "CONFIDENCE LEVEL",
     ]
+    missing = [s for s in required if s not in headings]
+    issues = []
+    positions = _positions(text)
+    names = [name for name, _ in positions]
+    if not 2 <= len(positions) <= 4 or len(set(names)) != len(names):
+        issues.append("Require 2-4 unique delimited lens positions")
+    if len(re.findall(r"^---BEGIN ", text, re.MULTILINE)) != len(positions) or len(re.findall(r"^---END ", text, re.MULTILINE)) != len(positions):
+        issues.append("Unmatched position delimiters")
+    fields = ["Verdict:", "Decision context impact:", "Lens domain impact:", "Decision framing:",
+        "- Scope:", "- Timeline:", "- Resource:", "- Risk:", "- Success Criteria:", "- Assumptions / Unknowns:",
+        "Key concerns:", "Key endorsements:", "Non-negotiables:"]
+    for name, body in positions:
+        for label in fields:
+            if not re.search(rf"^{re.escape(label)}", body, re.MULTILINE):
+                issues.append(f"{name}: missing position field {label}")
+        if not re.search(r"^Verdict: (GO|MODIFY|BLOCK)\s*$", body, re.MULTILINE):
+            issues.append(f"{name}: invalid verdict")
+    if partial and any(s in headings for s in ("ALIGNED PLAN", "FINAL DECISION", "EXECUTIVE ALIGNMENT REVIEW - COMPLETION SUMMARY")):
+        issues.append("Pending decision must not present a completed brief")
+    if partial:
+        split = text.split("DECISION SPLIT (AWAITING USER INPUT)", 1)[1]
+        for field in ("Decision needed", "Why escalation happened", "What the user should answer", "What remains blocked until then"):
+            if not re.search(rf"^{field}:[ \t]*\S", split, re.MULTILINE):
+                issues.append(f"Partial brief requires {field}")
+        for option in ("OPTION A", "OPTION B"):
+            section = re.search(rf"^(?:#{{1,6}}\s+)?{option}\s*\n(.*?)(?=^(?:#{{1,6}}\s+)?OPTION [AB]\s*$|\Z)", split, re.MULTILINE | re.DOTALL)
+            for field in ("Supported by", "What changes", "Upside", "Downside"):
+                if section is None or not re.search(rf"^{field}:[ \t]*\S", section.group(1), re.MULTILINE):
+                    issues.append(f"{option} requires {field}")
+    return {"passed": not missing and not issues, "kind": "partial" if partial else "complete", "missing_sections": missing, "issues": issues}
 
-    missing = [s for s in required_sections if s not in text]
-    has_verdicts = any(v in text for v in ["GO", "MODIFY", "BLOCK"])
 
-    return {
-        "passed": len(missing) == 0 and has_verdicts,
-        "missing_sections": missing,
-        "has_verdicts": has_verdicts,
-    }
+def _headings(text: str) -> list[str]:
+    return re.findall(r"^(?:#{1,6}\s+)?([A-Z][A-Z0-9 /()—-]+?)\s*$", text, re.MULTILINE)
+
+
+def _positions(text: str) -> list[tuple[str, str]]:
+    return re.findall(r"^---BEGIN ([A-Z][A-Za-z]*) POSITION---\s*\n(.*?)^---END \1 POSITION---\s*$", text, re.MULTILINE | re.DOTALL)
+
+
+def _verdicts(text: str) -> dict[str, str]:
+    verdicts = {}
+    for name, body in _positions(text):
+        match = re.search(r"^Verdict: (GO|MODIFY|BLOCK)\s*$", body, re.MULTILINE)
+        if match:
+            verdicts[name] = match.group(1)
+    return verdicts
 
 
 def validate_quality_gate(brief_path: Path) -> dict[str, Any]:
-    """Score analysis quality (heuristic)."""
+    """Legacy configuration key: advisory format hints, never a quality score."""
     try:
         text = brief_path.read_text(encoding="utf-8")
     except Exception:
-        return {"passed": False, "score": 0, "note": "Cannot read file"}
-
-    score = 0
-    max_score = 10
-
-    # Length indicates depth (rough heuristic)
-    word_count = len(text.split())
-    if word_count > 500:
-        score += 2
-    elif word_count > 200:
-        score += 1
-
-    # Has structured sections
-    if "VERDICT ALIGNMENT" in text:
-        score += 2
-    if "CONFLICT MAP" in text:
-        score += 2
-    if "FINAL DECISION" in text:
-        score += 2
-
-    # Has multiple lens positions
-    lens_count = text.count("---BEGIN")
-    if lens_count >= 2:
-        score += 2
-    elif lens_count >= 1:
-        score += 1
-
-    # Has risk analysis
-    if "Risk:" in text or "risk" in text.lower():
-        score += 2
-
-    return {
-        "passed": score >= 6,
-        "score": min(score, max_score),
-        "max_score": max_score,
-        "word_count": word_count,
-        "lens_count": lens_count,
-    }
+        return {"passed": False, "note": "Cannot read file"}
+    return {"advisory": True, "note": "Format hints only; reasoning quality is not measured", "word_count": len(text.split()), "lens_count": len(_positions(text))}
 
 
 def validate_consistency(brief_path: Path) -> dict[str, Any]:
@@ -477,19 +512,14 @@ def validate_consistency(brief_path: Path) -> dict[str, Any]:
 
     issues = []
 
-    # Check for contradictory verdict language
-    if "GO" in text and "BLOCK" in text:
-        if "SPLIT" in text:
-            pass  # Expected
-        else:
-            issues.append("Mixed GO and BLOCK verdicts without SPLIT alignment noted")
-
-    # Check for timeline contradictions (crude check)
-    timeline_mentions = re.findall(r"(\d+)[\s-]*(month|week|quarter|year)s?", text, re.IGNORECASE)
-    if len(timeline_mentions) > 1:
-        unique_timelines = set(timeline_mentions)
-        if len(unique_timelines) > 1:
-            issues.append(f"Multiple timeline references: {unique_timelines}")
+    verdicts = list(_verdicts(text).values())
+    alignment = re.search(r"^Alignment: (UNANIMOUS|SPLIT|ALL DISAGREE)\s*$", text, re.MULTILINE)
+    if not verdicts or not alignment:
+        issues.append("Missing lens verdicts or alignment label")
+    else:
+        expected = "UNANIMOUS" if len(set(verdicts)) == 1 else "ALL DISAGREE" if len(set(verdicts)) == len(verdicts) else "SPLIT"
+        if alignment.group(1) != expected:
+            issues.append(f"Initial verdicts require {expected} alignment")
 
     return {
         "passed": len(issues) == 0,
@@ -505,17 +535,15 @@ def validate_regression(brief_path: Path, baseline_path: Path) -> dict[str, Any]
     except Exception as e:
         return {"passed": False, "note": f"Cannot read files: {e}"}
 
-    current_sections = len(re.findall(r"^[A-Z][A-Z ]+$", text, re.MULTILINE))
-    baseline_sections = len(re.findall(r"^[A-Z][A-Z ]+$", baseline, re.MULTILINE))
-
-    current_verdicts = len(re.findall(r"(?:GO|MODIFY|BLOCK)", text))
-    baseline_verdicts = len(re.findall(r"(?:GO|MODIFY|BLOCK)", baseline))
-
+    sections_changed = _headings(text) != _headings(baseline)
+    verdicts_changed = _verdicts(text) != _verdicts(baseline)
+    content_changed = " ".join(text.split()) != " ".join(baseline.split())
     return {
-        "passed": True,
+        "passed": not sections_changed and not verdicts_changed and not content_changed,
         "delta": {
-            "sections_changed": current_sections != baseline_sections,
-            "verdicts_changed": current_verdicts != baseline_verdicts,
+            "sections_changed": sections_changed,
+            "verdicts_changed": verdicts_changed,
+            "content_changed": content_changed,
         },
     }
 
@@ -531,12 +559,11 @@ def print_validation_report(results: dict[str, Any]) -> None:
             print(f"Contract: {status}")
             if result.get("missing_sections"):
                 print(f"  Missing sections: {result['missing_sections']}")
+            for issue in result.get("issues", []):
+                print(f"  - {issue}")
 
         elif check == "quality_gate":
-            score = result.get("score", 0)
-            max_score = result.get("max_score", 10)
-            status = "PASS" if result.get("passed") else "WARN"
-            print(f"Quality Gate: {status} ({score}/{max_score})")
+            print(f"Format hints (not a quality score): {result.get('note')}")
 
         elif check == "consistency":
             status = "PASS" if result.get("passed") else "ISSUES"
@@ -549,7 +576,8 @@ def print_validation_report(results: dict[str, Any]) -> None:
                 print(f"Regression: {result['note']}")
             else:
                 delta = result.get("delta", {})
-                print(f"Regression: PASS (sections: {'changed' if delta.get('sections_changed') else 'same'}, verdicts: {'changed' if delta.get('verdicts_changed') else 'same'})")
+                status = "PASS" if result.get("passed") else "FAIL"
+                print(f"Regression: {status} (sections: {'changed' if delta.get('sections_changed') else 'same'}, verdicts: {'changed' if delta.get('verdicts_changed') else 'same'}, content: {'changed' if delta.get('content_changed') else 'same'})")
 
     print()
 
@@ -557,104 +585,58 @@ def print_validation_report(results: dict[str, Any]) -> None:
 # ─── Main ────────────────────────────────────────────────────────────
 
 def main() -> int:
-    """Main entry point."""
-    args = sys.argv[1:]
-
-    if not args or "--help" in args or "-h" in args:
-        print_usage()
-        return 0
-
-    command = args[0]
-    rest = args[1:]
-
-    if command == "hooks":
-        return cmd_hooks(rest)
-    elif command == "validate":
-        return cmd_validate(rest)
-    elif command == "run":
-        problem = None
-        orchestration_path = None
-        depth = None
-
-        i = 0
-        while i < len(rest):
-            if rest[i] == "--orchestration" and i + 1 < len(rest):
-                orchestration_path = Path(rest[i + 1])
-                i += 2
-            elif rest[i] == "--depth" and i + 1 < len(rest):
-                depth = rest[i + 1]
-                i += 2
-            elif rest[i] == "--":
-                problem = " ".join(rest[i + 1:])
-                break
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    run = commands.add_parser("run", help="Generate a plan for the host agent; does not invoke models or scripts")
+    run.add_argument("problem")
+    for option in ("orchestration", "reasoning", "validation"):
+        run.add_argument(f"--{option}", type=Path)
+    run.add_argument("--depth", choices=("surface", "standard", "deep"))
+    run.add_argument("--json", action="store_true")
+    validate = commands.add_parser("validate", help="Check a standard multi-lens brief (not model quality)")
+    validate.add_argument("brief", type=Path)
+    validate.add_argument("--config", type=Path)
+    validate.add_argument("--json", action="store_true")
+    hooks = commands.add_parser("hooks")
+    hooks.add_argument("action", choices=("list", "enable", "disable"))
+    hooks.add_argument("target", nargs="?")
+    context = commands.add_parser("context", help="Read a target project's indexed memory as an attributed snapshot")
+    context.add_argument("--project-root", type=Path, required=True)
+    args = parser.parse_args()
+    try:
+        if args.command == "context":
+            print(json.dumps(load_project_context(args.project_root), indent=2, ensure_ascii=False))
+            return 0
+        if args.command == "hooks":
+            return cmd_hooks([args.action] + ([args.target] if args.target else []))
+        if args.command == "validate":
+            config = load_validation_config(args.config) if args.config else ValidationConfig(contract=True)
+            results = run_validation(args.brief, config)
+            if args.json:
+                print(json.dumps(results, indent=2))
             else:
-                if problem is None:
-                    problem = rest[i]
-                i += 1
-
-        if not problem:
-            print("Error: no problem specified")
-            print_usage()
-            return 1
-
+                print_validation_report(results)
+            return 0 if all(r.get("passed", True) for r in results.values()) else 1
         registry = HookRegistry.load()
-        orch_config = load_orchestration_config(orchestration_path)
-        reasoning_config = load_reasoning_config()
-        validation_config = load_validation_config()
-
-        if depth:
-            reasoning_config.depth = depth
-
-        print(f"Problem: {problem}")
-        print(f"Orchestration: {orch_config.mode}")
-        print(f"Reasoning depth: {reasoning_config.depth}")
-        print(f"Active hooks: {len([h for h in registry.hooks if h.enabled])}")
-        print(f"Validation: contract={validation_config.contract}, quality={validation_config.quality_gate}, consistency={validation_config.consistency}")
-
+        orchestration = load_orchestration_config(args.orchestration)
+        reasoning = load_reasoning_config(args.reasoning)
+        validation = load_validation_config(args.validation)
+        if args.depth:
+            reasoning.depth = args.depth
         output = {
-            "problem": problem,
-            "orchestration": {
-                "mode": orch_config.mode,
-                "instances": [
-                    {
-                        "name": inst.name,
-                        "lenses": inst.lenses,
-                        "depends_on": inst.depends_on,
-                        "condition": inst.condition,
-                        "depth": inst.reasoning.depth,
-                    }
-                    for inst in orch_config.instances
-                ],
-            },
-            "reasoning": {
-                "depth": reasoning_config.depth,
-                "min_lenses": reasoning_config.min_lenses,
-                "max_lenses": reasoning_config.max_lenses,
-                "constraints": reasoning_config.constraints,
-                "output_format": reasoning_config.output_format,
-            },
-            "validation": {
-                "contract": validation_config.contract,
-                "quality_gate": validation_config.quality_gate,
-                "consistency": validation_config.consistency,
-                "regression": validation_config.regression,
-            },
-            "hooks": {
-                stage: [h.name for h in registry.get_for_stage(stage)]
-                for stage in ["pre-analysis", "lens-select", "review", "collision", "synthesis", "post-analysis"]
-            },
+            "problem": args.problem, "execution": "host-agent",
+            "orchestration": asdict(orchestration), "reasoning": asdict(reasoning), "validation": asdict(validation),
+            "hooks": {stage: [h.name for h in registry.get_for_stage(stage)] for stage in HOOK_STAGES},
         }
-
-        print("\n--- HARNESS CONFIG (JSON) ---")
+        if not args.json:
+            print("Plan only: the host agent executes reviews and hooks with user-authorized tools.\n--- HARNESS CONFIG (JSON) ---")
         print(json.dumps(output, indent=2))
-        print("--- END HARNESS CONFIG ---")
-
-        print("\nHarness config ready. AI agent should now execute the analysis.")
+        if not args.json:
+            print("--- END HARNESS CONFIG ---")
         return 0
-    else:
-        print(f"Unknown command: {command}")
-        print_usage()
-        return 1
+    except (OSError, ValueError, TypeError) as error:
+        print(f"Harness error: {error}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

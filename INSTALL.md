@@ -59,7 +59,7 @@ Optional explicit target path:
 bash tools/install_opencode.sh ~/.config/opencode/skills
 ```
 
-The installer builds `dist/opencode-polylens/` and installs self-contained `polylens/` and `polylens-lens-review/` skill directories with nested `shared/` runtime assets, so OpenCode never needs to traverse outside the active skill directory.
+The installer builds a verified temporary bundle and installs self-contained `polylens/` and `polylens-lens-review/` skill directories with nested `shared/` runtime assets and Python tools, so OpenCode never needs to traverse outside the active skill directory.
 
 ### Rule 0.5: Common Agent Installers
 
@@ -69,7 +69,7 @@ PolyLens also ships explicit installers for the common sibling-layout agents:
 - Codex: `bash tools/install_codex.sh`
 - GitHub Copilot workspace install: `bash tools/install_copilot_workspace.sh /path/to/workspace`
 
-These scripts build `dist/standard-polylens/` and install the standard sibling bundle:
+These scripts build a verified temporary bundle and install the standard sibling layout:
 
 - `polylens/`
 - `polylens-lens-review/`
@@ -86,8 +86,6 @@ bash tools/install_copilot_workspace.sh /path/to/workspace
 ### Rule 1: Preserve Sibling Layout
 
 For Claude Code, Codex, RooCode, Copilot workspace installs, and other agents that correctly resolve sibling-relative paths, the final target skills location must contain these sibling directories:
-
-The final target skills location must contain these sibling directories:
 
 - `<skills-root>/polylens`
 - `<skills-root>/polylens-lens-review`
@@ -133,13 +131,26 @@ For GitHub Copilot in VS Code, use one of these approaches:
 
 Do not treat the whole repository root as a skills directory.
 
-## Verification
+## Safe Updates and Windows Without Bash
+
+Installers require Python 3.11+ with no third-party packages. They refuse existing directories
+without a PolyLens ownership marker and refuse symlinks/junctions. Inspect and move legacy or
+manual installations yourself first, especially a generic `shared/` directory. Never delete
+unknown content to make installation proceed. Managed updates retain previous files under
+`<skills-root>/.polylens-backup-<id>/` and roll back moved entries if installation fails.
+
+Without Bash, use `python tools/install_bundle.py --target <skills-root> --layout standard`
+or `--layout opencode`. Standalone build commands still produce `dist/standard-polylens/`
+and `dist/opencode-polylens/` when a release artifact is wanted.
+
+## Verification Checklist
 
 After installation:
 
 1. For OpenCode installs, confirm the target location contains `polylens/shared/` and `polylens-lens-review/shared/`.
 2. For other agents, confirm the target location contains `polylens`, `polylens-lens-review`, and `shared` as siblings.
 3. Confirm the public skills can resolve their runtime markdown dependencies.
+   Confirm the installed `shared/tools/harness.py` runs from outside this repository.
 4. Ask the agent or user-facing environment what skills are available, if that environment supports it.
 
 ## Suggested Completion Message

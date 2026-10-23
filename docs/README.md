@@ -2,11 +2,12 @@
 
 This directory now acts as a lightweight navigation layer, not a second full product README.
 
-For the full product overview, installation, usage, architecture, lens model, and extension guidance, start with [../README.md](../README.md).
+For the full product overview, installation, usage, architecture, lens model, and extension guidance, start with [../Readme.md](../Readme.md).
 
 ## What Lives Here
 
-- [../README.md](../README.md): canonical project documentation
+- [../Readme.md](../Readme.md): canonical project documentation
+- [evaluation.md](evaluation.md): deterministic checks versus real model behavior evaluation
 - [project-memory-model.md](project-memory-model.md): project-specific memory schema for durable context, preferences, and decision history
 - [polylens/README.md](polylens/README.md): canonical markdown artifact storage rules
 - [polylens/reviews/](polylens/reviews/): saved executive review briefs
@@ -17,7 +18,7 @@ For the full product overview, installation, usage, architecture, lens model, an
 
 ## Reading Order
 
-1. Read [../README.md](../README.md) for the full PolyLens model and runtime structure.
+1. Read [../Readme.md](../Readme.md) for the full PolyLens model and runtime structure.
 2. Read [project-memory-model.md](project-memory-model.md) for project-specific memory classes and update rules.
 3. Read [polylens/README.md](polylens/README.md) for save-path and filename conventions.
 4. Use the subdirectories under [polylens/](polylens/) for generated artifacts only.
@@ -33,7 +34,7 @@ For the full product overview, installation, usage, architecture, lens model, an
 
 Contributions are welcome in these areas:
 
-- **New lenses** — Add perspectives we haven't covered (COO, CFO, and more)
+- **Lenses** — Improve existing perspectives or add a clearly distinct decision owner
 - **Improved frameworks** — Better analytical frameworks for lenses to use
 - **Conflict resolution models** — New strategies for resolving disagreements
 - **Engine improvements** — Better collision detection or synthesis logic
@@ -51,24 +52,5 @@ To contribute:
 
 ## License
 
-MIT License
-
-Copyright (c) 2026 PolyLens Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+GNU GPL v3.0 or later, as stated in the root project documentation. See [LICENSE](../LICENSE)
+for the authoritative license text; this navigation page does not define a separate license.

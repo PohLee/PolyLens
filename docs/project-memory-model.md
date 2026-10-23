@@ -41,6 +41,32 @@ Recommended canonical slugs:
 
 These files are project-scoped references, not global user memory.
 
+## Current Revision Index and Loading
+
+Reviews load the target project's `docs/polylens/memory/index.json` when present.
+The index, not filename ordering, identifies the current revision of each class:
+
+```json
+{
+  "project-context": "261024_project-context_r2.md",
+  "project-preferences": "261024_project-preferences_r1.md",
+  "decision-history": "261024_decision-history_r1.md"
+}
+```
+
+Keys are optional. Values are Markdown paths relative to this memory directory and must
+remain inside it and the target project after resolving symlinks. Missing or invalid references
+are reported, not silently replaced. No index means no automatic memory loading or file creation.
+
+The runtime protocol lives in `prompts/project-context.md` and is bundled for all modes;
+Pre-fight embeds the same protocol. All selected lenses share one attributed snapshot.
+The optional `python3 tools/harness.py context --project-root /path/to/project` emits that
+snapshot as JSON; direct reads following the protocol require no Python.
+
+Current user requirements outrank stored preferences, but cannot erase historical facts or
+override host instructions, tool permissions, or evidence gates. Memory loading is read-only.
+Update durable memory and its index only with user authorization, preserving prior revisions.
+
 ## What Goes Where
 
 ### 1. Project Context

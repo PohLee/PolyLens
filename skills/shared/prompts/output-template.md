@@ -96,6 +96,10 @@ Alignment: [UNANIMOUS / SPLIT / ALL DISAGREE]
 - **SPLIT:** One or more lenses dissent, but there is at least one shared verdict
 - **ALL DISAGREE:** Each lens has a different verdict
 
+UNANIMOUS describes verdict alignment only, not the absence of conflicts.
+Always compare framing and non-negotiables. Keep required modifications, execution blockers,
+material assumptions, and pending user decisions separate. Consensus does not determine confidence.
+
 ## Section 3: Detailed Conflict Mapping
 
 Stacked view across dimensions. Each dimension lists the lens's position on that dimension (GO/MODIFY/BLOCK + brief reason, or a short phrase describing their stance).
@@ -187,7 +191,7 @@ RISK REGISTER
   Mitigation: [plan]
 ```
 
-When a Type 5 conflict needs a user decision, do not output this section as if it were complete. Output the partial-brief split below and stop for user input:
+When any conflict needs a user decision (including Type 4 resource escalation or Type 5), do not output this section as if it were complete. Output the partial-brief split below and stop for user input:
 
 ```
 DECISION SPLIT (AWAITING USER INPUT)
@@ -282,6 +286,6 @@ OUTCOMES
 
 ## Confidence Level Criteria
 
-- **High:** No unresolved Type 5 conflict, no material assumptions left open, no accepted high-severity risk without mitigation, and no deferred decision that blocks execution
+- **High:** No pending user decision or execution blocker, no material assumptions left open, no accepted high-severity risk without mitigation, and no deferred decision that blocks execution
 - **Medium:** Some disagreement or deferred decisions remain, but the execution path is still clear and all critical risks or assumptions have owners and mitigation
 - **Low:** User decision still required, material assumptions remain unresolved, accepted high-severity risks lack sufficient mitigation, or key execution decisions are deferred

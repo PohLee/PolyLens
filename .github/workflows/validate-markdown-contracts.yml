@@ -8,7 +8,11 @@ on:
 
 jobs:
   validate-markdown-contracts:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.14"]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Check out repository
@@ -17,7 +21,22 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python }}
+
+      - name: Check all generated runtime resources and projections
+        run: python tools/sync_playbooks.py --check
 
       - name: Validate PolyLens markdown contracts
-        run: python3 tools/validate_markdown_contracts.py
+        run: python tools/validate_markdown_contracts.py
+
+      - name: Test CLI, isolated releases, safe installation, and protocol contracts
+        run: python -B -m unittest discover -s tests -v
+
+      - name: Check Python syntax
+        run: python -m compileall -q tools tests
+
+      - name: Smoke test Bash installer entrypoints
+        if: runner.os == 'Linux'
+        run: |
+          bash tools/install_opencode.sh "$RUNNER_TEMP/polylens-opencode"
+          bash tools/install_personal_skills.sh "$RUNNER_TEMP/polylens-standard"

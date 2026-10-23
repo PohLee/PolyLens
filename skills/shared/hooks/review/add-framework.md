@@ -2,7 +2,7 @@
 hook: review
 name: add-framework
 order: 1
-enabled: true
+enabled: false
 type: markdown
 ---
 

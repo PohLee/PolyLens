@@ -265,10 +265,10 @@ Each lens entry contains:
 7. **Rank by relevance:** Sum the scores and keep a note of which user constraints each lens covers, but never let an adjacent lens displace the primary owner of the decision anchor.
 8. **Apply pairing rules:** If a top lens has `pairs_with` recommendations, boost those lenses' scores by 0.5 (only if they are also active)
 9. **Promote strategic complement when needed:** If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, this usually means pairing CTO with CEO.
-10. **Prefer coverage without drift:** Select 2-4 lenses that cover the prompt's main decision and its highest-consequence tradeoffs rather than stacking near-duplicates or adding weakly related oversight lenses
+10. **Prefer coverage without drift:** For a multi-lens review, select 2-4 lenses covering the main decision and its highest-consequence tradeoffs. For a focused review, Select exactly one lens: apply the same ranking, treat veto coverage as eligibility, and recommend a multi-lens review if one lens cannot cover the decision. Pairing and strategic complements do not add lenses in focused mode.
 11. **Cap secondary lenses:** After the anchor lens, its owner, and any necessary strategy complement, add supporting lenses only when they introduce a distinct decision axis with explicit evidence. Do not add finance, security, or operations lenses solely because those concerns exist in the background.
-12. **Break ties deterministically:** Use this order: stronger ownership match, stronger decision-anchor match, stronger trigger match, more direct user wording match, `default: true`, registry order
-13. **Fallback:** If no strong matches (all scores < 2), use lenses marked `default: true`
+12. **Break ties deterministically:** Use this order: stronger ownership match, stronger decision-anchor match, more direct user wording match, stronger trigger match, `default: true`, registry order
+13. **Fallback:** Only if all scores < 2, use active lenses marked `default: true`; exactly 2 is a strong match. In focused mode choose the highest-ranked default lens only.
 
 Example guidance:
 - If the user asks about "tech stack," anchor on CTO first and usually include CEO because stack choice shapes speed, leverage, and company direction.

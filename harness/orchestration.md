@@ -1,53 +1,35 @@
 ---
-mode: sequential
-instances:
-  - name: primary-review
-    lenses: []
-    reasoning:
-      depth: standard
-    hooks:
-      pre-analysis: []
-      review: []
-  - name: follow-up-review
-    depends_on: primary-review
-    lenses: []
-    reasoning:
-      depth: standard
-    condition: null
+{
+  "mode": "sequential",
+  "instances": []
+}
 ---
 
 ## Orchestration Plan
 
-[Edit this section to define your multi-instance orchestration strategy]
+Empty instances means a single normal review, not two example reviews. Harness is opt-in.
+Configuration uses JSON between the `---` delimiters; nested YAML is rejected, not flattened.
+The Python CLI generates a plan. The host agent executes it within existing tool permissions.
 
-### Execution Modes
-
-- **sequential** — Run instances in order, feed output to next
-- **parallel** — Run independent instances concurrently, merge results
-- **conditional** — Evaluate conditions, selectively run instances
-
-### Instance Configuration
-
-Each instance specifies:
-- `name`: Unique identifier
-- `lenses`: Specific lenses to use (empty = auto-select)
-- `depends_on`: Name of instance this depends on (null = no dependency)
-- `condition`: Condition to evaluate before running (null = always run)
-- `reasoning.depth`: analysis depth (surface | standard | deep)
-- `hooks`: Hooks to apply for this instance
+Modes: `sequential` (listed order), `parallel` (ready independent instances),
+`conditional` (host evaluates conditions before each dependent instance).
+Names must be unique; dependencies must exist and form an acyclic graph.
+Conditions are plain-language instructions, never Python or shell expressions to evaluate.
+If a condition is unknown, report it and do not execute that instance without clarification.
 
 ### Example: Technical → Business Review
 
-```yaml
-mode: sequential
-instances:
-  - name: technical-review
-    lenses: [CTO, CISO]
-    reasoning:
-      depth: deep
-  - name: business-impact
-    depends_on: technical-review
-    lenses: [CEO, CFO, CRO]
-    reasoning:
-      depth: standard
+Replace the frontmatter object with:
+
+```json
+{
+  "mode": "sequential",
+  "instances": [
+    {"name": "technical-review", "lenses": ["CTO", "CISO"], "reasoning": {"depth": "deep"}},
+    {"name": "business-impact", "depends_on": "technical-review", "lenses": ["CEO", "CFO", "CRO"]}
+  ]
+}
 ```
+
+Each instance can additionally specify `condition`, `hooks` (stage → list of hook names),
+and `reasoning` with the same fields as the shared reasoning configuration.

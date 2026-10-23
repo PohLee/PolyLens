@@ -2,3 +2,5 @@
 dist
 docs/superpowers
 .superpowers
+__pycache__/
+*.py[cod]

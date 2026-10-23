@@ -2,7 +2,7 @@
 hook: post-analysis
 name: summarize
 order: 1
-enabled: true
+enabled: false
 type: markdown
 ---
 

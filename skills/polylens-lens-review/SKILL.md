@@ -17,6 +17,8 @@ Read the problem or plan being reviewed. Identify:
 - Did the user explicitly name a lens?
 - Is the user asking for a single focused perspective rather than a multi-lens debate?
 
+Before lens selection, read and follow `../shared/prompts/project-context.md` to load an attributed snapshot from the target project's indexed memory.
+
 For PR crisis response or reputation recovery, read and apply `../shared/playbooks/pr-crisis-recovery.md` before forming the lens position. Its gates are mandatory even when research is disabled. Include its evidence ledger and response checks in the focused review.
 
 ### Step 1: Select One Lens
@@ -25,15 +27,23 @@ Read the bundled lens registry at `../shared/prompts/lens-registry.md`.
 
 **If the user specified a lens:** Use it.
 
-**If no lens was specified:** Select exactly one lens using this algorithm:
-1. Filter active lenses only.
-2. Identify the primary decision anchor and separate it from supporting constraints.
-3. Prefer the lens role that owns that decision category.
-4. Score explicit trigger matches at +2 and domain matches at +1.
-5. Downweight supporting constraints unless the user clearly wants optimization for them.
-6. If the prompt explicitly touches a veto area, treat that lens as strongly eligible.
-7. Break ties deterministically in this order: ownership match, decision-anchor match, explicit user wording match, trigger score, `default: true`, registry order.
-8. If no lens scores above 2, choose the strongest default lens from the registry.
+**If no lens was specified:** Apply the authoritative selection contract:
+
+<!-- BEGIN GENERATED SELECTION -->
+1. **Filter active lenses:** Only consider lenses where `active: true`
+2. **Identify the decision anchor:** Separate the primary decision being asked from supporting constraints. The primary decision should drive the first lens selection.
+3. **Promote decision owners first:** If the anchor matches a lens's `owns_decisions`, that lens should usually be selected before adjacent lenses that only evaluate consequences of the decision.
+4. **Score explicit wording:** Exact or near-exact matches against `triggers` score +2; domain/theme matches score +1
+5. **Downweight ambient constraints:** Budget, timeline, team size, compliance, or risk details count as supporting signals unless the user explicitly asks to optimize for them or they are central to the decision itself
+6. **Apply veto coverage:** If the prompt explicitly touches a lens's `veto_on` area, include that lens or state why it is being deferred.
+7. **Rank by relevance:** Sum the scores and keep a note of which user constraints each lens covers, but never let an adjacent lens displace the primary owner of the decision anchor.
+8. **Apply pairing rules:** If a top lens has `pairs_with` recommendations, boost those lenses' scores by 0.5 (only if they are also active)
+9. **Promote strategic complement when needed:** If the anchor decision is foundational and company-shaping, add the nearest strategy lens even if the wording is technical. For technical architecture or tech stack choices, this usually means pairing CTO with CEO.
+10. **Prefer coverage without drift:** For a multi-lens review, select 2-4 lenses covering the main decision and its highest-consequence tradeoffs. For a focused review, Select exactly one lens: apply the same ranking, treat veto coverage as eligibility, and recommend a multi-lens review if one lens cannot cover the decision. Pairing and strategic complements do not add lenses in focused mode.
+11. **Cap secondary lenses:** After the anchor lens, its owner, and any necessary strategy complement, add supporting lenses only when they introduce a distinct decision axis with explicit evidence. Do not add finance, security, or operations lenses solely because those concerns exist in the background.
+12. **Break ties deterministically:** Use this order: stronger ownership match, stronger decision-anchor match, more direct user wording match, stronger trigger match, `default: true`, registry order
+13. **Fallback:** Only if all scores < 2, use active lenses marked `default: true`; exactly 2 is a strong match. In focused mode choose the highest-ranked default lens only.
+<!-- END GENERATED SELECTION -->
 
 Announce the selected lens and why it was chosen.
 

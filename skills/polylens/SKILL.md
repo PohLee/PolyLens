@@ -27,14 +27,29 @@ Announce which mode was selected and why.
 
 ### Step 2.5: Check for Harness Configuration
 
-Before executing the orchestrator, check for harness configuration:
+Harness is optional and applies to **standard review mode** only. Pre-fight keeps its own
+embedded execution flow; do not switch modes to apply Harness. If a user requests an
+incompatible multi-instance Harness flow in pre-fight, explain that limitation explicitly.
+
+For standard mode, activate Harness when the user requests deep/surface analysis, validation,
+inline hooks, multi-instance orchestration, or reusable non-default configuration:
 
 1. Check if `../shared/harness/orchestration.md` exists and has instances configured
 2. Check if `../shared/harness/reasoning.md` exists with non-default settings
-3. Check if `../shared/harness/validation.md` exists with validation enabled
+3. Check if `../shared/harness/validation.md` exists with any validation check enabled
 4. Check if `../shared/hooks/` directory has any enabled hooks
 
-If ANY of the above are true, the harness is active. Run `python3 ../shared/tools/harness.py run "problem"` to get the harness config JSON, then follow the harness execution flow defined in the orchestrator.
+If active and Python is available, invoke `../shared/tools/harness.py run` with the problem as
+one safely passed argument and `--json` to obtain the plan. Resolve tool/config paths from this
+skill's base directory, not the target project's working directory. Translate explicit user
+depth requests to `--depth`; apply inline hooks/constraints as per-request overrides without
+changing installed files. The CLI generates configuration, not a model invocation.
+
+If Python is unavailable, follow the same JSON configuration and Markdown hooks directly,
+report that deterministic CLI validation was not run, and continue the core Markdown review.
+Shipped configurations and example hooks are inactive by default. Their presence alone does
+not activate Harness. User tool restrictions remain in force; script hooks require explicit
+authorization and are never executed by the Python plan generator.
 
 If NONE are active, proceed to Step 3 with the standard flow.
 

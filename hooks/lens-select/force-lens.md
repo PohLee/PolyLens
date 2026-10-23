@@ -2,7 +2,7 @@
 hook: lens-select
 name: force-lens
 order: 1
-enabled: true
+enabled: false
 type: markdown
 ---
 
